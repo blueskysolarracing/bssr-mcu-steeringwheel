@@ -47,6 +47,9 @@
 
 /* USER CODE BEGIN PV */
 LS032B7DD02_HandleTypeDef ls032;
+uint8_t ls032_vram[LS032_VRAM_HEIGHT*LS032_PIXEL_WIDTH + 2] = {0};
+uint16_t ls032_vram_len = LS032_VRAM_HEIGHT*LS032_PIXEL_WIDTH + 2;
+
 
 /* USER CODE END PV */
 
@@ -69,6 +72,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+	HAL_GPIO_WritePin(DISPLAY_EXTMODE_GPIO_Port, DISPLAY_EXTMODE_Pin, GPIO_PIN_SET);
 
 
   /* USER CODE END 1 */
@@ -96,15 +100,25 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM4_Init();
   MX_USART2_UART_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
 	// FAULT LIGHT PWM:
-	TIM4->CCR1 = 100;
+	TIM4->CCR1 = 10;
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
 
 	// READ LIGHT PWM:
-	TIM4->CCR3 = 100;
+	TIM4->CCR3 = 0;
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+
+	// LEFT IND:
+	TIM3->CCR2 = 0;
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+
+	// RIGHT IND:
+	TIM3->CCR3 = 0;
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+
 
 	// SET UP THE DISPLAY
 	ls032.spi_handle = &hspi3;
@@ -112,9 +126,19 @@ int main(void)
 	ls032.cs_gpio_pin = SPI3_CS_Pin;
 	ls032.extcomin_tim_handle = &htim2;
 	ls032.extcomin_channel = TIM_CHANNEL_2;
+	ls032.extmode_gpio_handle = DISPLAY_EXTMODE_GPIO_Port;
+	ls032.extmode_gpio_pin = DISPLAY_EXTMODE_Pin;
 	ls032.disp_gpio_handle = DISPLAY_DISP_GPIO_Port;
 	ls032.disp_gpio_pin = DISPLAY_DISP_Pin;
-	LS032B7DD02_Init(&ls032);
+	ls032.vram = ls032_vram;
+	ls032.vram_len = ls032_vram_len;
+
+	if (LS032B7DD02_Init(&ls032)) {
+		// TODO: Error Handle
+	}
+
+	LS032B7DD02_DrawLogo(&ls032);
+	LS032B7DD02_Update(&ls032);
 
   /* USER CODE END 2 */
 
@@ -123,9 +147,12 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  LS032B7DD02_Write(&ls032);
-	  HAL_Delay(100);
+
     /* USER CODE BEGIN 3 */
+//	LS032B7DD02_Fill(&ls032);
+//	LS032B7DD02_Update(&ls032);
+//	LS032B7DD02_Clear(&ls032);
+//	LS032B7DD02_Update(&ls032);
   }
   /* USER CODE END 3 */
 }
@@ -151,7 +178,13 @@ void SystemClock_Config(void)
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 1;
+  RCC_OscInitStruct.PLL.PLLN = 8;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
+  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
+  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -161,12 +194,12 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
   {
     Error_Handler();
   }
