@@ -104,19 +104,19 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 	// FAULT LIGHT PWM:
-	TIM4->CCR1 = 10;
+	TIM4->CCR1 = 100;
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
 
 	// READ LIGHT PWM:
-	TIM4->CCR3 = 0;
+	TIM4->CCR3 = 1000;
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
 
 	// LEFT IND:
-	TIM3->CCR2 = 0;
+	TIM3->CCR2 = 10000;
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
 
 	// RIGHT IND:
-	TIM3->CCR3 = 0;
+	TIM3->CCR3 = 10000;
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
 
 
