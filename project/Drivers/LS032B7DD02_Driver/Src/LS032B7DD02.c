@@ -140,12 +140,12 @@ uint8_t LS032B7DD02_DrawChar(LS032B7DD02_HandleTypeDef *ls032, char ch) {
 		return SUCCESS;
 	}
 
-	uint16_t char_idx = ALPHNUM_1_IDX[(uint8_t)ch];
+	uint16_t char_idx = ALPHNUM_4_IDX[(uint8_t)ch];
 	if (char_idx == 0)
 		return ERROR;	// char is unable to be rendered
 
-	uint8_t char_width = ALPHNUM_1[char_idx];
-	uint8_t char_height = 1;
+	uint8_t char_width = ALPHNUM_4[char_idx];
+	uint8_t char_height = 4;
 	uint16_t vram_idx = 0;
 	get_idx_from_cursor(ls032, &vram_idx);
 
@@ -158,7 +158,7 @@ uint8_t LS032B7DD02_DrawChar(LS032B7DD02_HandleTypeDef *ls032, char ch) {
 		char_height = LS032_PIXEL_HEIGHT - ls032->cursor_y;
 
 	for (uint8_t col = 0; col < char_width; col++) {
-		memcpy(ls032->vram + vram_idx, ALPHNUM_1 + char_idx + 1 + col*char_height, char_height);
+		memcpy(ls032->vram + vram_idx, ALPHNUM_4 + char_idx + 1 + col*char_height, char_height);
 		vram_idx += LS032_VRAM_HEIGHT;
 	}
 	return SUCCESS;
