@@ -7,45 +7,45 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
   1 .text         00004ec8  08000188  08000188  00001188  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .rodata       00002cc4  08005050  08005050  00006050  2**2
+  2 .rodata       00004ad0  08005050  08005050  00006050  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  3 .ARM.extab    00000000  08007d14  08007d14  00009010  2**0
+  3 .ARM.extab    00000000  08009b20  08009b20  0000b010  2**0
                   CONTENTS, READONLY
-  4 .ARM          00000008  08007d14  08007d14  00008d14  2**2
+  4 .ARM          00000008  08009b20  08009b20  0000ab20  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  5 .preinit_array 00000000  08007d1c  08007d1c  00009010  2**0
+  5 .preinit_array 00000000  08009b28  08009b28  0000b010  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  6 .init_array   00000004  08007d1c  08007d1c  00008d1c  2**2
+  6 .init_array   00000004  08009b28  08009b28  0000ab28  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  7 .fini_array   00000004  08007d20  08007d20  00008d20  2**2
+  7 .fini_array   00000004  08009b2c  08009b2c  0000ab2c  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  8 .data         00000010  20000000  08007d24  00009000  2**2
+  8 .data         00000010  20000000  08009b30  0000b000  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-  9 .bss          00005ea8  20000010  08007d34  00009010  2**2
+  9 .bss          00005ea8  20000010  08009b40  0000b010  2**2
                   ALLOC
- 10 ._user_heap_stack 00000600  20005eb8  08007d34  00009eb8  2**0
+ 10 ._user_heap_stack 00000600  20005eb8  08009b40  0000beb8  2**0
                   ALLOC
- 11 .ARM.attributes 00000030  00000000  00000000  00009010  2**0
+ 11 .ARM.attributes 00000030  00000000  00000000  0000b010  2**0
                   CONTENTS, READONLY
- 12 .debug_info   000126aa  00000000  00000000  00009040  2**0
+ 12 .debug_info   000125c2  00000000  00000000  0000b040  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 13 .debug_abbrev 000027ba  00000000  00000000  0001b6ea  2**0
+ 13 .debug_abbrev 000027ba  00000000  00000000  0001d602  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_aranges 000010d0  00000000  00000000  0001dea8  2**3
+ 14 .debug_aranges 000010d0  00000000  00000000  0001fdc0  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_rnglists 00000d1f  00000000  00000000  0001ef78  2**0
+ 15 .debug_rnglists 00000d1f  00000000  00000000  00020e90  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_macro  00024392  00000000  00000000  0001fc97  2**0
+ 16 .debug_macro  00024392  00000000  00000000  00021baf  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   00014e87  00000000  00000000  00044029  2**0
+ 17 .debug_line   00014e87  00000000  00000000  00045f41  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    000e33c7  00000000  00000000  00058eb0  2**0
+ 18 .debug_str    000e335c  00000000  00000000  0005adc8  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000043  00000000  00000000  0013c277  2**0
+ 19 .comment      00000043  00000000  00000000  0013e124  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00004674  00000000  00000000  0013c2bc  2**2
+ 20 .debug_frame  00004674  00000000  00000000  0013e168  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 0000007c  00000000  00000000  00140930  2**0
+ 21 .debug_line_str 00000071  00000000  00000000  001427dc  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -2432,7 +2432,7 @@ LoopForever:
   ldr r1, =_edata
  8001030:	20000010 	.word	0x20000010
   ldr r2, =_sidata
- 8001034:	08007d24 	.word	0x08007d24
+ 8001034:	08009b30 	.word	0x08009b30
   ldr r2, =_sbss
  8001038:	20000010 	.word	0x20000010
   ldr r4, =_ebss
@@ -3039,7 +3039,7 @@ uint8_t LS032B7DD02_DrawLogo(LS032B7DD02_HandleTypeDef *ls032) {
  800141a:	3710      	adds	r7, #16
  800141c:	46bd      	mov	sp, r7
  800141e:	bd80      	pop	{r7, pc}
- 8001420:	08005410 	.word	0x08005410
+ 8001420:	0800721c 	.word	0x0800721c
 
 08001424 <LS032B7DD02_DrawChar>:
 
@@ -3061,7 +3061,7 @@ uint8_t LS032B7DD02_DrawChar(LS032B7DD02_HandleTypeDef *ls032, char ch) {
  8001438:	e051      	b.n	80014de <LS032B7DD02_DrawChar+0xba>
 	}
 
-	uint16_t char_idx = ALPHNUM_1_IDX[(uint8_t)ch];
+	uint16_t char_idx = ALPHNUM_4_IDX[(uint8_t)ch];
  800143a:	78fb      	ldrb	r3, [r7, #3]
  800143c:	4a2a      	ldr	r2, [pc, #168]	@ (80014e8 <LS032B7DD02_DrawChar+0xc4>)
  800143e:	f832 3013 	ldrh.w	r3, [r2, r3, lsl #1]
@@ -3074,13 +3074,13 @@ uint8_t LS032B7DD02_DrawChar(LS032B7DD02_HandleTypeDef *ls032, char ch) {
  800144a:	2301      	movs	r3, #1
  800144c:	e047      	b.n	80014de <LS032B7DD02_DrawChar+0xba>
 
-	uint8_t char_width = ALPHNUM_1[char_idx];
+	uint8_t char_width = ALPHNUM_4[char_idx];
  800144e:	897b      	ldrh	r3, [r7, #10]
  8001450:	4a26      	ldr	r2, [pc, #152]	@ (80014ec <LS032B7DD02_DrawChar+0xc8>)
  8001452:	5cd3      	ldrb	r3, [r2, r3]
  8001454:	73fb      	strb	r3, [r7, #15]
-	uint8_t char_height = 1;
- 8001456:	2301      	movs	r3, #1
+	uint8_t char_height = 4;
+ 8001456:	2304      	movs	r3, #4
  8001458:	73bb      	strb	r3, [r7, #14]
 	uint16_t vram_idx = 0;
  800145a:	2300      	movs	r3, #0
@@ -3125,7 +3125,7 @@ uint8_t LS032B7DD02_DrawChar(LS032B7DD02_HandleTypeDef *ls032, char ch) {
  800149e:	2300      	movs	r3, #0
  80014a0:	737b      	strb	r3, [r7, #13]
  80014a2:	e017      	b.n	80014d4 <LS032B7DD02_DrawChar+0xb0>
-		memcpy(ls032->vram + vram_idx, ALPHNUM_1 + char_idx + 1 + col*char_height, char_height);
+		memcpy(ls032->vram + vram_idx, ALPHNUM_4 + char_idx + 1 + col*char_height, char_height);
  80014a4:	687b      	ldr	r3, [r7, #4]
  80014a6:	6a5b      	ldr	r3, [r3, #36]	@ 0x24
  80014a8:	893a      	ldrh	r2, [r7, #8]
@@ -13416,10 +13416,10 @@ static void UART_EndRxTransfer(UART_HandleTypeDef *huart)
  8005006:	4798      	blx	r3
  8005008:	3601      	adds	r6, #1
  800500a:	e7f2      	b.n	8004ff2 <__libc_init_array+0x1e>
- 800500c:	08007d1c 	.word	0x08007d1c
- 8005010:	08007d1c 	.word	0x08007d1c
- 8005014:	08007d1c 	.word	0x08007d1c
- 8005018:	08007d20 	.word	0x08007d20
+ 800500c:	08009b28 	.word	0x08009b28
+ 8005010:	08009b28 	.word	0x08009b28
+ 8005014:	08009b28 	.word	0x08009b28
+ 8005018:	08009b2c 	.word	0x08009b2c
 
 0800501c <memcpy>:
  800501c:	440a      	add	r2, r1
