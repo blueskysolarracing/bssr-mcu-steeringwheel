@@ -161,8 +161,6 @@ uint8_t LS032B7DD02_DrawChar(LS032B7DD02_HandleTypeDef *ls032, char ch) {
 		memcpy(ls032->vram + vram_idx, ALPHNUM_1 + char_idx + 1 + col*char_height, char_height);
 		vram_idx += LS032_VRAM_HEIGHT;
 	}
-
-	ls032->cursor_x += char_width;
 	return SUCCESS;
 }
 

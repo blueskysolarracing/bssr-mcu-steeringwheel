@@ -108,7 +108,7 @@ int main(void)
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
 
 	// READ LIGHT PWM:
-	TIM4->CCR3 = 0;
+	TIM4->CCR3 = 1000;
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
 
 	// LEFT IND:
