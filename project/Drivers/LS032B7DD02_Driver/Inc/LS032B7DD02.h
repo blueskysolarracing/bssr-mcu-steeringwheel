@@ -41,6 +41,10 @@ typedef struct
 
 	uint16_t			vram_len;		// vram length
 
+	uint16_t			cursor_x;	// vram draw position
+
+	uint16_t			cursor_y;
+
 } LS032B7DD02_HandleTypeDef;
 
 	// FUNCS
@@ -58,5 +62,7 @@ uint8_t LS032B7DD02_Wipe(LS032B7DD02_HandleTypeDef *ls032);
 
 // Specific Drawing
 uint8_t LS032B7DD02_DrawLogo(LS032B7DD02_HandleTypeDef *ls032);
+uint8_t LS032B7DD02_DrawChar(LS032B7DD02_HandleTypeDef *ls032, char ch);
+uint8_t LS032B7DD02_DrawString(LS032B7DD02_HandleTypeDef *ls032, uint8_t len, char* str);
 
 #endif /* LS032B7DD02_DRIVER_LS032B7DD02_H_ */

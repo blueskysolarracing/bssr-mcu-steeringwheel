@@ -36,16 +36,24 @@ void get_gate_addr(uint16_t gate_addr, uint8_t *bytes) {
 	bytes[1] |= (gate_addr & 0b0000001000000000) >> 9;
 }
 
+uint8_t get_idx_from_cursor(LS032B7DD02_HandleTypeDef *ls032, uint16_t *vram_idx) {
+	if (ls032->cursor_x >= LS032_PIXEL_WIDTH) return ERROR;
+	if (ls032->cursor_y >= LS032_VRAM_HEIGHT - 2) return ERROR;
+
+	*vram_idx = ls032->cursor_x * 44 + ls032->cursor_y + 2;
+
+	return SUCCESS;
+}
+
 // FUNCTION IMPLEMENTEATIONS
 // ------------------------------------------------------------------------------------
 
 uint8_t LS032B7DD02_Init(LS032B7DD02_HandleTypeDef *ls032) {
-	uint8_t ret = 0;
 	// EXTMODE pin should already be default high
 	// Initialize vram
 	memset(ls032->vram, 0x00, ls032->vram_len);
 	for (uint16_t col = 0; col < LS032_PIXEL_WIDTH; col++) {
-		// Fill in addresing of every column as single array
+		// Fill in addressing of every column as single array
 		get_gate_addr(col, ls032->vram + col*LS032_VRAM_HEIGHT);
 	}
 
@@ -120,6 +128,47 @@ uint8_t LS032B7DD02_DrawLogo(LS032B7DD02_HandleTypeDef *ls032) {
 	uint16_t y_off = (42 - 21) / 2;
 	for (uint16_t x = 0; x < 500; x++) {
 		memcpy(ls032->vram + (x+x_off)*44 + y_off + 2, BSSR_LOGO + x*21, 21);
+	}
+
+	return SUCCESS;
+}
+
+uint8_t LS032B7DD02_DrawChar(LS032B7DD02_HandleTypeDef *ls032, char ch) {
+	// Account for newline
+	if (ch == '\n') {
+		// TODO: Move cursor to newline
+		return SUCCESS;
+	}
+
+	uint16_t char_idx = ALPHNUM_1_IDX[(uint8_t)ch];
+	if (char_idx == 0)
+		return ERROR;	// char is unable to be rendered
+
+	uint8_t char_width = ALPHNUM_1[char_idx];
+	uint8_t char_height = 1;
+	uint16_t vram_idx = 0;
+	get_idx_from_cursor(ls032, &vram_idx);
+
+	// Get distance to edge of screen on X
+	if (LS032_PIXEL_WIDTH - ls032->cursor_x < char_width)
+		char_width = LS032_PIXEL_WIDTH - ls032->cursor_x;
+
+	// Get distance to edge of screen on Y
+	if (LS032_PIXEL_HEIGHT - ls032->cursor_y < char_height)
+		char_height = LS032_PIXEL_HEIGHT - ls032->cursor_y;
+
+	for (uint8_t col = 0; col < char_width; col++) {
+		memcpy(ls032->vram + vram_idx, ALPHNUM_1 + char_idx + 1 + col*char_height, char_height);
+		vram_idx += LS032_VRAM_HEIGHT;
+	}
+
+	ls032->cursor_x += char_width;
+	return SUCCESS;
+}
+
+uint8_t LS032B7DD02_DrawString(LS032B7DD02_HandleTypeDef *ls032, uint8_t len, char* str) {
+	for (uint8_t i = 0; i < len; i++) {
+		LS032B7DD02_DrawChar(ls032, str[i]);
 	}
 
 	return SUCCESS;

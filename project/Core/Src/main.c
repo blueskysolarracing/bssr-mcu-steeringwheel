@@ -104,19 +104,19 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 	// FAULT LIGHT PWM:
-	TIM4->CCR1 = 100;
+	TIM4->CCR1 = 0;
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
 
 	// READ LIGHT PWM:
-	TIM4->CCR3 = 1000;
+	TIM4->CCR3 = 0;
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
 
 	// LEFT IND:
-	TIM3->CCR2 = 10000;
+	TIM3->CCR2 = 0;
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
 
 	// RIGHT IND:
-	TIM3->CCR3 = 10000;
+	TIM3->CCR3 = 0;
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
 
 
@@ -132,6 +132,8 @@ int main(void)
 	ls032.disp_gpio_pin = DISPLAY_DISP_Pin;
 	ls032.vram = ls032_vram;
 	ls032.vram_len = ls032_vram_len;
+	ls032.cursor_x = 0;
+	ls032.cursor_y = 0;
 
 	if (LS032B7DD02_Init(&ls032)) {
 		// TODO: Error Handle
@@ -139,6 +141,8 @@ int main(void)
 
 	LS032B7DD02_DrawLogo(&ls032);
 	LS032B7DD02_Update(&ls032);
+
+	uint8_t tmp_num = 0;
 
   /* USER CODE END 2 */
 
@@ -149,8 +153,14 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	LS032B7DD02_Fill(&ls032);
-//	LS032B7DD02_Update(&ls032);
+	  LS032B7DD02_Clear(&ls032);
+	  LS032B7DD02_Wipe(&ls032);
+	  LS032B7DD02_DrawChar(&ls032, tmp_num + 48);
+	  LS032B7DD02_Update(&ls032);
+	  tmp_num++;
+	  if (tmp_num > 9)
+		  tmp_num = 0;
+	  HAL_Delay(500);
 //	LS032B7DD02_Clear(&ls032);
 //	LS032B7DD02_Update(&ls032);
   }
