@@ -15,54 +15,80 @@
 #define LS032_VRAM_HEIGHT  44
 #define LS032_VRAM_START_Y 2
 
+#define LS032_NUMREGISTERS 32
+
 // STRUCTS
 // ------------------------------------------------------------------------------------
 typedef struct
 {
-	SPI_HandleTypeDef 	*spi_handle;	// ptr to SPI_HandleTypeDef which interfaces with the LS032
+	uint8_t 			idx;
 
-	GPIO_TypeDef		*cs_gpio_handle;// ptr to GPIO handle of CS line
+	uint16_t			pos_x;	// vram draw position
 
-	uint16_t			cs_gpio_pin;	// GPIO pin no. of CS line
+	uint16_t			pos_y;
 
-	TIM_HandleTypeDef	*extcomin_tim_handle; // ptr to the extcomin timer
+	uint8_t 			size;
 
-	uint16_t			extcomin_channel;	// TIM channel of extcomin
+	uint8_t				mode;
 
-	GPIO_TypeDef		*extmode_gpio_handle;// ptr to GPIO handle of DISP
+	uint8_t				len;
 
-	uint16_t			extmode_gpio_pin;	// GPIO pin no. of DISP
+	char				*str;
 
-	GPIO_TypeDef		*disp_gpio_handle;// ptr to GPIO handle of DISP
+} LS032_TextReg;
 
-	uint16_t			disp_gpio_pin;	// GPIO pin no. of DISP
+typedef struct
+{
+	SPI_HandleTypeDef 	*spi_handle;			// ptr to SPI_HandleTypeDef which interfaces with the LS032
 
-	uint8_t				*vram;			// ptr to the MCU side copy of VRAM
+	GPIO_TypeDef		*cs_gpio_handle;		// ptr to GPIO handle of CS line
 
-	uint16_t			vram_len;		// vram length
+	uint16_t			cs_gpio_pin;			// GPIO pin no. of CS line
 
-	uint16_t			cursor_x;	// vram draw position
+	TIM_HandleTypeDef	*extcomin_tim_handle; 	// ptr to the extcomin timer
 
-	uint16_t			cursor_y;
+	uint16_t			extcomin_channel;		// TIM channel of extcomin
 
-} LS032B7DD02_HandleTypeDef;
+	GPIO_TypeDef		*extmode_gpio_handle;	// ptr to GPIO handle of DISP
+
+	uint16_t			extmode_gpio_pin;		// GPIO pin no. of DISP
+
+	GPIO_TypeDef		*disp_gpio_handle;		// ptr to GPIO handle of DISP
+
+	uint16_t			disp_gpio_pin;			// GPIO pin no. of DISP
+
+	uint8_t				*vram;					// ptr to the MCU side copy of VRAM
+
+	uint16_t			vram_len;				// vram length
+
+	LS032_TextReg		*registers;
+
+} LS032_HandleTypeDef;
 
 	// FUNCS
 	// ------------------------------------------------------------------------------------
 
 // Commands
-uint8_t LS032B7DD02_Init(LS032B7DD02_HandleTypeDef *ls032);
-uint8_t LS032B7DD02_Send(LS032B7DD02_HandleTypeDef *ls032, uint8_t *data, uint16_t len);
+uint8_t LS032_Init(LS032_HandleTypeDef *ls032);
+uint8_t LS032_Send(LS032_HandleTypeDef *ls032, uint8_t *data, uint16_t len);
+
+uint8_t LS032_TextReg_SetPos(LS032_HandleTypeDef *ls032, uint8_t reg, uint16_t pos_x, uint16_t pos_y);
+uint8_t LS032_TextReg_SetSize(LS032_HandleTypeDef *ls032, uint8_t reg, uint8_t size);
+uint8_t LS032_TextReg_SetMode(LS032_HandleTypeDef *ls032, uint8_t reg, uint8_t mode);
+uint8_t LS032_TextReg_SetString(LS032_HandleTypeDef *ls032, uint8_t reg, uint8_t len, char* str);
 
 // General Drawing
-uint8_t LS032B7DD02_Clear(LS032B7DD02_HandleTypeDef *ls032);
-uint8_t LS032B7DD02_Fill(LS032B7DD02_HandleTypeDef *ls032);
-uint8_t LS032B7DD02_Update(LS032B7DD02_HandleTypeDef *ls032);
-uint8_t LS032B7DD02_Wipe(LS032B7DD02_HandleTypeDef *ls032);
+uint8_t LS032_Clear(LS032_HandleTypeDef *ls032);
+uint8_t LS032_Fill(LS032_HandleTypeDef *ls032);
+uint8_t LS032_Update(LS032_HandleTypeDef *ls032);
+uint8_t LS032_Wipe(LS032_HandleTypeDef *ls032);
+
+uint8_t LS032_DrawRegister(LS032_HandleTypeDef *ls032, uint8_t reg);
+uint8_t LS032_DrawScene(LS032_HandleTypeDef *ls032);
 
 // Specific Drawing
-uint8_t LS032B7DD02_DrawLogo(LS032B7DD02_HandleTypeDef *ls032);
-uint8_t LS032B7DD02_DrawChar(LS032B7DD02_HandleTypeDef *ls032, char ch);
-uint8_t LS032B7DD02_DrawString(LS032B7DD02_HandleTypeDef *ls032, uint8_t len, char* str);
+uint8_t LS032_DrawLogo(LS032_HandleTypeDef *ls032);
+uint8_t LS032_DrawChar(LS032_HandleTypeDef *ls032, uint16_t pos_x, uint16_t pos_y, uint8_t size, char ch);
+uint8_t LS032_DrawString(LS032_HandleTypeDef *ls032, uint16_t pos_x, uint16_t pos_y, uint8_t size, uint8_t len, char* str);
 
 #endif /* LS032B7DD02_DRIVER_LS032B7DD02_H_ */

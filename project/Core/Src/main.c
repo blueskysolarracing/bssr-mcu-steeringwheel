@@ -46,9 +46,14 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-LS032B7DD02_HandleTypeDef ls032;
+
+// LS032 Memory allocations
+LS032_HandleTypeDef ls032;
 uint8_t ls032_vram[LS032_VRAM_HEIGHT*LS032_PIXEL_WIDTH + 2] = {0};
 uint16_t ls032_vram_len = LS032_VRAM_HEIGHT*LS032_PIXEL_WIDTH + 2;
+
+LS032_TextReg ls032_registers[LS032_NUMREGISTERS];
+char ls032_registers_text[LS032_NUMREGISTERS][0xFF];
 
 
 /* USER CODE END PV */
@@ -132,17 +137,24 @@ int main(void)
 	ls032.disp_gpio_pin = DISPLAY_DISP_Pin;
 	ls032.vram = ls032_vram;
 	ls032.vram_len = ls032_vram_len;
-	ls032.cursor_x = 0;
-	ls032.cursor_y = 0;
 
-	if (LS032B7DD02_Init(&ls032)) {
+	// Assign register memory to references in LS032
+	ls032.registers = ls032_registers;
+	for (uint8_t i = 0; i < 32; i++)
+		ls032.registers[i].str = ls032_registers_text[i];
+
+	if (LS032_Init(&ls032)) {
 		// TODO: Error Handle
 	}
 
-	LS032B7DD02_DrawLogo(&ls032);
-	LS032B7DD02_Update(&ls032);
+	LS032_DrawLogo(&ls032);
+	LS032_Update(&ls032);
 
 	uint8_t tmp_num = 0;
+	char bars[10] = "||||||||||";
+
+	LS032_TextReg_SetPos(&ls032, 0x00, 10, 10);
+	LS032_TextReg_SetSize(&ls032, 0x00, 7);
 
   /* USER CODE END 2 */
 
@@ -153,14 +165,16 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  LS032B7DD02_Clear(&ls032);
-	  LS032B7DD02_Wipe(&ls032);
-	  LS032B7DD02_DrawChar(&ls032, tmp_num + 48);
-	  LS032B7DD02_Update(&ls032);
+	  LS032_Clear(&ls032);
+	  LS032_Wipe(&ls032);
+	  LS032_TextReg_SetString(&ls032, 0x00, tmp_num, bars);
+	  LS032_DrawScene(&ls032);
+	  LS032_Update(&ls032);
+
 	  tmp_num++;
 	  if (tmp_num > 9)
 		  tmp_num = 0;
-	  HAL_Delay(500);
+	  //HAL_Delay(100);
 //	LS032B7DD02_Clear(&ls032);
 //	LS032B7DD02_Update(&ls032);
   }
