@@ -10,7 +10,7 @@ def safe_name(g):
         return "u%04X" % g.unicode
 
 def main():
-    fontfile = "ari-w9500-display.ttf"
+    fontfile = "JetBrainsMono-Bold.ttf"
     outdir = "TMP/"
     os.makedirs(outdir, exist_ok=True)
 
@@ -20,7 +20,7 @@ def main():
 
     font = fontforge.open(fontfile)
 
-    for char_size in range(1, 9):
+    for char_size in range(1, 17):
         char_idx_array_str = "" 
         char_array_str = "" 
         char_index = 1
