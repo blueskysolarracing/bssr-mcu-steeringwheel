@@ -24,6 +24,7 @@ C_DEPS :=
 SUBDIRS := \
 Core/Src \
 Core/Startup \
+Drivers/Inputs_Driver/Src \
 Drivers/LS032B7DD02_Driver/Src \
 Drivers/STM32L4xx_HAL_Driver/Src \
 

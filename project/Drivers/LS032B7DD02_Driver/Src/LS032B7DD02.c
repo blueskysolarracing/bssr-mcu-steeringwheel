@@ -166,7 +166,7 @@ uint8_t LS032_UpdateManual(LS032_HandleTypeDef *ls032) {
 	return LS032_TX_DMA(ls032, ls032->vram, ls032->vram_len);
 }
 
-uint8_t LS032_UpdateAuto(LS032_HandleTypeDef *ls032) {
+uint8_t LS032_UpdateAsync(LS032_HandleTypeDef *ls032) {
 	if (ls032->update_queued == 0) return ERROR;
 	if (LS032_DrawScene(ls032)) return ERROR;
 	return LS032_TX_DMA(ls032, ls032->vram, ls032->vram_len);

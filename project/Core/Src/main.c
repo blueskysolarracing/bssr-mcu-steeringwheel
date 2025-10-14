@@ -58,6 +58,8 @@ uint16_t ls032_vram_len = LS032_VRAM_HEIGHT*LS032_PIXEL_WIDTH + 2;
 LS032_TextReg ls032_registers[LS032_NUMREGISTERS];
 char ls032_registers_text[LS032_NUMREGISTERS][0xFF];
 
+// SPI RX memory allocations
+uint8_t spi1_rx_buf[257] = {0};
 
 /* USER CODE END PV */
 
@@ -117,7 +119,7 @@ int main(void)
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
 
 	// READ LIGHT PWM:
-	TIM4->CCR3 = 000;
+	TIM4->CCR3 = 5000;
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
 
 	// LEFT IND:
@@ -197,7 +199,7 @@ int main(void)
 	  LS032_TextReg_SetString(&ls032, 0x01, tmp_num/5, speed_bars_2);
 
 
-	  LS032_UpdateAuto(&ls032);
+	  LS032_UpdateAsync(&ls032);
 
 	  tmp_num += 1;
 	  if (tmp_num > 99)
@@ -259,12 +261,70 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+// ------------------------------------------------------------ HELPER FUNCTIONS -- //
+
+void Handle_SPI1_RX_START() {
+	// Reset the buffer and start DMA
+	memset(spi1_rx_buf, 0x00, 257);
+	HAL_SPI_Receive_DMA(&hspi1, spi1_rx_buf, 257);
+}
+
+void Handle_SPI1_RX_CPLT() {
+	// Stop DMA and parse the packet
+	HAL_SPI_DMAStop(&hspi1);
+
+	if (spi1_rx_buf[0] & 0b10000000) {
+		// DISPLAY CMD
+		uint8_t reg  = (spi1_rx_buf[0] & 0b01111100) >> 2;
+		uint8_t prop = (spi1_rx_buf[0] & 0b00000011);
+		switch (prop) {
+			case 0:
+				uint16_t pos_x = (((uint16_t)spi1_rx_buf[1]) << 8) | ((uint16_t)spi1_rx_buf[2]);
+				uint16_t pos_y = (((uint16_t)spi1_rx_buf[3]) << 8) | ((uint16_t)spi1_rx_buf[4]);
+				LS032_TextReg_SetPos(&ls032, reg, pos_x, pos_y);
+				break;
+			case 1:
+				uint8_t size = spi1_rx_buf[1];
+				LS032_TextReg_SetSize(&ls032, reg, size);
+				break;
+			case 2:
+				uint8_t mode = spi1_rx_buf[1];
+				LS032_TextReg_SetMode(&ls032, reg, mode);
+				break;
+			case 3:
+				uint8_t len = spi1_rx_buf[1];
+				LS032_TextReg_SetString(&ls032, reg, len, (char*)(spi1_rx_buf + 2));
+				break;
+			default:
+				break;
+		}
+	} else {
+		// INPUT CMD
+		//TODO: Return values
+	}
+}
+
+// ------------------------------------------------------------ OVERRIDE EXTERNAL INTERRUPTS -- //
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if(GPIO_Pin == SPI1_CS_Pin) {
+	  if (HAL_GPIO_ReadPin(SPI1_CS_GPIO_Port, SPI1_CS_Pin)) {
+		  // SPI CS was just deasserted
+		  Handle_SPI1_RX_CPLT();
+	  } else {
+		  // SPI CS was just asserted
+		  Handle_SPI1_RX_START();
+	  }
+  } else {
+      __NOP();
+  }
+}
 
 // ------------------------------------------------------------ OVERRIDE SPI DMA CALLBACKS -- //
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
-	ls032.spi_state = 0;
-	HAL_GPIO_WritePin(ls032.cs_gpio_handle, ls032.cs_gpio_pin, GPIO_PIN_RESET);
-	//LS032_TX_DMA_CPLT(&ls032);
+//	ls032.spi_state = 0;
+//	HAL_GPIO_WritePin(ls032.cs_gpio_handle, ls032.cs_gpio_pin, GPIO_PIN_RESET);
+	LS032_TX_DMA_CPLT(&ls032);
 }
 
 /* USER CODE END 4 */

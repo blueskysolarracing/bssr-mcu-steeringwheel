@@ -9,7 +9,7 @@
 ../Drivers/LS032B7DD02_Driver/Src/LS032B7DD02.c:141:9:LS032_TextReg_SetMode	2
 ../Drivers/LS032B7DD02_Driver/Src/LS032B7DD02.c:150:9:LS032_TextReg_SetString	2
 ../Drivers/LS032B7DD02_Driver/Src/LS032B7DD02.c:164:9:LS032_UpdateManual	2
-../Drivers/LS032B7DD02_Driver/Src/LS032B7DD02.c:169:9:LS032_UpdateAuto	3
+../Drivers/LS032B7DD02_Driver/Src/LS032B7DD02.c:169:9:LS032_UpdateAsync	3
 ../Drivers/LS032B7DD02_Driver/Src/LS032B7DD02.c:175:9:LS032_Wipe	1
 ../Drivers/LS032B7DD02_Driver/Src/LS032B7DD02.c:180:9:LS032_Clear	2
 ../Drivers/LS032B7DD02_Driver/Src/LS032B7DD02.c:188:9:LS032_Fill	2
