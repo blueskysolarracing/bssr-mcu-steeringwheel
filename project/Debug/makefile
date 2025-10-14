@@ -61,8 +61,8 @@ all: main-build
 main-build: bssr-mcu-steeringwheel.elf secondary-outputs
 
 # Tool invocations
-bssr-mcu-steeringwheel.elf bssr-mcu-steeringwheel.map: $(OBJS) $(USER_OBJS) D:\_BlueSky\Steering\ Wheel\SOFTWARE\bssr-mcu-steeringwheel\project\STM32L471RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "bssr-mcu-steeringwheel.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\_BlueSky\Steering Wheel\SOFTWARE\bssr-mcu-steeringwheel\project\STM32L471RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="bssr-mcu-steeringwheel.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+bssr-mcu-steeringwheel.elf bssr-mcu-steeringwheel.map: $(OBJS) $(USER_OBJS) C:\Users\Loochis\STM32CubeIDE\workspace_1.19.0\bssr-mcu-steeringwheel\project\STM32L471RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "bssr-mcu-steeringwheel.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Loochis\STM32CubeIDE\workspace_1.19.0\bssr-mcu-steeringwheel\project\STM32L471RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="bssr-mcu-steeringwheel.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

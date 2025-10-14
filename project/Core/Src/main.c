@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
@@ -26,6 +27,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "LS032B7DD02.h"
+#include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -100,6 +103,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_SPI1_Init();
   MX_SPI3_Init();
   MX_TIM2_Init();
@@ -113,7 +117,7 @@ int main(void)
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
 
 	// READ LIGHT PWM:
-	TIM4->CCR3 = 1000;
+	TIM4->CCR3 = 000;
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
 
 	// LEFT IND:
@@ -148,13 +152,28 @@ int main(void)
 	}
 
 	LS032_DrawLogo(&ls032);
-	LS032_Update(&ls032);
+	//LS032_Update(&ls032);
 
 	uint8_t tmp_num = 0;
-	char bars[10] = "||||||||||";
+	char speed_letters[255];
+	char speed_bars_1[255];
+	char speed_bars_2[255];
+	char *speed_units = "KM/H";
 
-	LS032_TextReg_SetPos(&ls032, 0x00, 10, 10);
-	LS032_TextReg_SetSize(&ls032, 0x00, 7);
+	memset(speed_bars_1, '/', 255);
+	memset(speed_bars_2, '\\', 255);
+
+	LS032_TextReg_SetPos(&ls032, 0x02, 380, 26);
+	LS032_TextReg_SetSize(&ls032, 0x02, 3);
+
+	LS032_TextReg_SetString(&ls032, 0x03, strlen(speed_units), speed_units);
+	LS032_TextReg_SetPos(&ls032, 0x03, 420, 24);
+	LS032_TextReg_SetSize(&ls032, 0x03, 1);
+
+	LS032_TextReg_SetPos(&ls032, 0x00, 0, 30);
+	LS032_TextReg_SetSize(&ls032, 0x00, 1);
+	LS032_TextReg_SetPos(&ls032, 0x01, 0, 34);
+	LS032_TextReg_SetSize(&ls032, 0x01, 1);
 
   /* USER CODE END 2 */
 
@@ -165,16 +184,26 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  LS032_Clear(&ls032);
-	  LS032_Wipe(&ls032);
-	  LS032_TextReg_SetString(&ls032, 0x00, tmp_num, bars);
-	  LS032_DrawScene(&ls032);
-	  LS032_Update(&ls032);
 
-	  tmp_num++;
-	  if (tmp_num > 9)
+	  sprintf(speed_letters, "%d", tmp_num);
+
+	  LS032_Clear(&ls032);
+
+	  LS032_TextReg_SetString(&ls032, 0x02, strlen(speed_letters), speed_letters);
+
+	  LS032_TextReg_SetPos(&ls032, 0x00, (tmp_num % 5)*4, 30);
+	  LS032_TextReg_SetPos(&ls032, 0x01, (tmp_num % 5)*4, 34);
+	  LS032_TextReg_SetString(&ls032, 0x00, tmp_num/5, speed_bars_1);
+	  LS032_TextReg_SetString(&ls032, 0x01, tmp_num/5, speed_bars_2);
+
+
+	  LS032_UpdateAuto(&ls032);
+
+	  tmp_num += 1;
+	  if (tmp_num > 99)
 		  tmp_num = 0;
-	  //HAL_Delay(100);
+
+	  HAL_Delay(30);
 //	LS032B7DD02_Clear(&ls032);
 //	LS032B7DD02_Update(&ls032);
   }
@@ -230,6 +259,13 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+// ------------------------------------------------------------ OVERRIDE SPI DMA CALLBACKS -- //
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
+	ls032.spi_state = 0;
+	HAL_GPIO_WritePin(ls032.cs_gpio_handle, ls032.cs_gpio_pin, GPIO_PIN_RESET);
+	//LS032_TX_DMA_CPLT(&ls032);
+}
 
 /* USER CODE END 4 */
 

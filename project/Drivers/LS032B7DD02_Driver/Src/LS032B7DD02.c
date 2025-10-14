@@ -20,7 +20,8 @@ void delay_us(uint32_t us) {
 
 void get_gate_addr(uint16_t gate_addr, uint8_t *bytes) {
 
-	gate_addr = LS032_PIXEL_WIDTH - gate_addr;			// gate is 1 indexed
+	//gate_addr = LS032_PIXEL_WIDTH - gate_addr;			// gate is 1 indexed
+	gate_addr++;			// gate is 1 indexed
 	bytes[0] = 0b10000000; 	// Mode select (M0=H, M1=L, M2=L)
 
 	// This shoves 10 bits into B0 and B1, while flipping the endianness
@@ -67,10 +68,14 @@ uint8_t LS032_Init(LS032_HandleTypeDef *ls032) {
 		memset(ls032->registers[reg].str, 0x00, 0xFF);
 	}
 
+	// Flag SPI as Idle
+	ls032->spi_state = 0;
+	ls032->update_queued = 0;
+
 	delay_us(30);
 	// Need to clear twice for some reason
-	LS032_Wipe(ls032);
-	LS032_Wipe(ls032);
+	//LS032_Wipe(ls032);
+	//LS032_Wipe(ls032);
 	delay_us(30);
 	HAL_GPIO_WritePin(ls032->disp_gpio_handle, ls032->disp_gpio_pin, GPIO_PIN_SET);
 	delay_us(30);
@@ -79,21 +84,33 @@ uint8_t LS032_Init(LS032_HandleTypeDef *ls032) {
 	return SUCCESS;
 }
 
-uint8_t LS032_Send(LS032_HandleTypeDef *ls032, uint8_t *pData, uint16_t len) {
+uint8_t LS032_TX_DMA(LS032_HandleTypeDef *ls032, uint8_t *pData, uint16_t len) {
+	if (ls032->spi_state != 0) return ERROR;
+
+	// Clear update queue
+	ls032->update_queued = 0;
+
 	uint8_t ret = 0;
 
 	// Assert the CS high
 	HAL_GPIO_WritePin(ls032->cs_gpio_handle, ls032->cs_gpio_pin, GPIO_PIN_SET);
 	delay_us(3);
-	ret = HAL_SPI_Transmit(ls032->spi_handle, pData, len, 100);
+	ret = HAL_SPI_Transmit_DMA(ls032->spi_handle, pData, len);
+	ls032->spi_state = 1; // Flag SPI as BUSY
 	delay_us(1);
 	if (ret) {
 		// Release the CS
 		HAL_GPIO_WritePin(ls032->cs_gpio_handle, ls032->cs_gpio_pin, GPIO_PIN_RESET);
+		ls032->spi_state = 0;
 		return ret;
 	}
 
+	return SUCCESS;
+}
+
+uint8_t LS032_TX_DMA_CPLT(LS032_HandleTypeDef *ls032) {
 	// Release the CS
+	ls032->spi_state = 0;
 	HAL_GPIO_WritePin(ls032->cs_gpio_handle, ls032->cs_gpio_pin, GPIO_PIN_RESET);
 
 	return SUCCESS;
@@ -107,15 +124,17 @@ uint8_t LS032_TextReg_SetPos(LS032_HandleTypeDef *ls032, uint8_t reg, uint16_t p
 	ls032->registers[reg].pos_x = pos_x;
 	ls032->registers[reg].pos_y = pos_y;
 
+	ls032->update_queued = 1;
 	return SUCCESS;
 }
 
 uint8_t LS032_TextReg_SetSize(LS032_HandleTypeDef *ls032, uint8_t reg, uint8_t size) {
-	if (reg >= LS032_NUMREGISTERS) 	return ERROR;
-	if (size >= 8)					return ERROR;
+	if (reg >= LS032_NUMREGISTERS) return ERROR;
+	if (size >= NUM_ALPHNUM_SIZES) return ERROR;
 
 	ls032->registers[reg].size = size;
 
+	ls032->update_queued = 1;
 	return SUCCESS;
 }
 
@@ -124,6 +143,7 @@ uint8_t LS032_TextReg_SetMode(LS032_HandleTypeDef *ls032, uint8_t reg, uint8_t m
 
 	ls032->registers[reg].mode = mode;
 
+	ls032->update_queued = 1;
 	return SUCCESS;
 }
 
@@ -134,21 +154,27 @@ uint8_t LS032_TextReg_SetString(LS032_HandleTypeDef *ls032, uint8_t reg, uint8_t
 	memset(ls032->registers[reg].str, 0x00, 0xFF);	// Clear contents of string in case len doesnt match
 	memcpy(ls032->registers[reg].str, str, len);	// copy str into register buffer
 
+	ls032->update_queued = 1;
 	return SUCCESS;
 }
 
 // GENERAL DRAWING
 // ------------------------------------------------------------------------------------------
 
-uint8_t LS032_Update(LS032_HandleTypeDef *ls032) {
-	// Push VRAM to LCD Mem.
-	// Todo: Make this a DMA TX
-	return LS032_Send(ls032, ls032->vram, ls032->vram_len);
+uint8_t LS032_UpdateManual(LS032_HandleTypeDef *ls032) {
+	if (LS032_DrawScene(ls032)) return ERROR;
+	return LS032_TX_DMA(ls032, ls032->vram, ls032->vram_len);
+}
+
+uint8_t LS032_UpdateAuto(LS032_HandleTypeDef *ls032) {
+	if (ls032->update_queued == 0) return ERROR;
+	if (LS032_DrawScene(ls032)) return ERROR;
+	return LS032_TX_DMA(ls032, ls032->vram, ls032->vram_len);
 }
 
 uint8_t LS032_Wipe(LS032_HandleTypeDef *ls032) {
 	uint8_t clear_cmd[2] = {0x20, 0x00};
-	return LS032_Send(ls032, clear_cmd, 2);
+	return LS032_TX_DMA(ls032, clear_cmd, 2);
 }
 
 uint8_t LS032_Clear(LS032_HandleTypeDef *ls032) {
@@ -183,6 +209,7 @@ uint8_t LS032_DrawScene(LS032_HandleTypeDef *ls032) {
 		if (LS032_DrawRegister(ls032, reg))
 			return ERROR;
 	}
+
 	return SUCCESS;
 }
 
@@ -212,7 +239,7 @@ uint8_t LS032_DrawChar(LS032_HandleTypeDef *ls032, uint16_t pos_x, uint16_t pos_
 		return ERROR;	// char is unable to be rendered
 
 	uint8_t char_width = ALPHNUM_SIZES[size][char_idx];
-	uint8_t char_height = size + 1;
+	uint8_t char_height = ALPHNUM_HEIGHTS[size];
 	uint16_t vram_idx = 0;
 	get_idx_from_pos(pos_x, pos_y, &vram_idx);
 
@@ -234,7 +261,7 @@ uint8_t LS032_DrawChar(LS032_HandleTypeDef *ls032, uint16_t pos_x, uint16_t pos_
 uint8_t LS032_DrawString(LS032_HandleTypeDef *ls032, uint16_t pos_x, uint16_t pos_y, uint8_t size, uint8_t len, char* str) {
 	for (uint8_t i = 0; i < len; i++) {
 		LS032_DrawChar(ls032, pos_x, pos_y, size, str[i]);
-		uint16_t char_idx = ALPHNUM_SIZES_IDX[size][str[i]];
+		uint16_t char_idx = ALPHNUM_SIZES_IDX[size][(uint8_t)(str[i])];
 		pos_x += ALPHNUM_SIZES[size][char_idx];
 	}
 

@@ -45,6 +45,10 @@ typedef struct
 
 	uint16_t			cs_gpio_pin;			// GPIO pin no. of CS line
 
+	uint8_t 			spi_state;				// State of the SPI Transfer. 0 = Idle, 1 = Busy
+
+	uint8_t 			update_queued;			// State of the SPI Queue. 0 = No queue, 1 = Queue
+
 	TIM_HandleTypeDef	*extcomin_tim_handle; 	// ptr to the extcomin timer
 
 	uint16_t			extcomin_channel;		// TIM channel of extcomin
@@ -70,7 +74,8 @@ typedef struct
 
 // Commands
 uint8_t LS032_Init(LS032_HandleTypeDef *ls032);
-uint8_t LS032_Send(LS032_HandleTypeDef *ls032, uint8_t *data, uint16_t len);
+uint8_t LS032_TX_DMA(LS032_HandleTypeDef *ls032, uint8_t *data, uint16_t len);
+uint8_t LS032_TX_DMA_CPLT(LS032_HandleTypeDef *ls032);
 
 uint8_t LS032_TextReg_SetPos(LS032_HandleTypeDef *ls032, uint8_t reg, uint16_t pos_x, uint16_t pos_y);
 uint8_t LS032_TextReg_SetSize(LS032_HandleTypeDef *ls032, uint8_t reg, uint8_t size);
@@ -80,7 +85,8 @@ uint8_t LS032_TextReg_SetString(LS032_HandleTypeDef *ls032, uint8_t reg, uint8_t
 // General Drawing
 uint8_t LS032_Clear(LS032_HandleTypeDef *ls032);
 uint8_t LS032_Fill(LS032_HandleTypeDef *ls032);
-uint8_t LS032_Update(LS032_HandleTypeDef *ls032);
+uint8_t LS032_UpdateManual(LS032_HandleTypeDef *ls032);
+uint8_t LS032_UpdateAsync(LS032_HandleTypeDef *ls032);
 uint8_t LS032_Wipe(LS032_HandleTypeDef *ls032);
 
 uint8_t LS032_DrawRegister(LS032_HandleTypeDef *ls032, uint8_t reg);
