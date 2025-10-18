@@ -27,6 +27,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "LS032B7DD02.h"
+#include "inputs.h"
 #include <stdio.h>
 #include <string.h>
 /* USER CODE END Includes */
@@ -57,6 +58,22 @@ uint16_t ls032_vram_len = LS032_VRAM_HEIGHT*LS032_PIXEL_WIDTH + 2;
 
 LS032_TextReg ls032_registers[LS032_NUMREGISTERS];
 char ls032_registers_text[LS032_NUMREGISTERS][0xFF];
+
+// INPUTS Memory allocations
+Inputs_HandleTypeDef inputs;
+GPIO_TypeDef* input_sel_gpio_ports[4] = {
+		INPUT_B0_GPIO_Port,
+		INPUT_B1_GPIO_Port,
+		INPUT_B2_GPIO_Port,
+		INPUT_B3_GPIO_Port
+};
+
+uint16_t input_sel_gpio_pins[4] = {
+		INPUT_B0_Pin,
+		INPUT_B1_Pin,
+		INPUT_B2_Pin,
+		INPUT_B3_Pin
+};
 
 // SPI RX memory allocations
 uint8_t spi1_rx_buf[257] = {0};
@@ -115,7 +132,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 	// FAULT LIGHT PWM:
-	TIM4->CCR1 = 0;
+	TIM4->CCR1 = 500;
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
 
 	// READ LIGHT PWM:
@@ -153,6 +170,16 @@ int main(void)
 		// TODO: Error Handle
 	}
 
+	// SET UP THE INPUTS LIBRARY
+	inputs.sel_gpio_handles = input_sel_gpio_ports;
+	inputs.sel_gpio_pins = input_sel_gpio_pins;
+	inputs.it_gpio_handle = INPUT_IT_GPIO_Port;
+	inputs.it_gpio_pin = INPUT_IT_Pin;
+	inputs.state_gpio_handle = INPUT_STATE_GPIO_Port;
+	inputs.state_gpio_pin = INPUT_STATE_Pin;
+	inputs.states = 0x0000;
+	inputs.states_itmask = 0xFFFF;
+
 	LS032_DrawLogo(&ls032);
 	//LS032_Update(&ls032);
 
@@ -161,6 +188,7 @@ int main(void)
 	char speed_bars_1[255];
 	char speed_bars_2[255];
 	char *speed_units = "KM/H";
+	char inputs_vis[255];
 
 	memset(speed_bars_1, '/', 255);
 	memset(speed_bars_2, '\\', 255);
@@ -176,6 +204,9 @@ int main(void)
 	LS032_TextReg_SetSize(&ls032, 0x00, 1);
 	LS032_TextReg_SetPos(&ls032, 0x01, 0, 34);
 	LS032_TextReg_SetSize(&ls032, 0x01, 1);
+
+	LS032_TextReg_SetPos(&ls032, 0x04, 00, 0);
+	LS032_TextReg_SetSize(&ls032, 0x04, 1);
 
   /* USER CODE END 2 */
 
@@ -197,6 +228,10 @@ int main(void)
 	  LS032_TextReg_SetPos(&ls032, 0x01, (tmp_num % 5)*4, 34);
 	  LS032_TextReg_SetString(&ls032, 0x00, tmp_num/5, speed_bars_1);
 	  LS032_TextReg_SetString(&ls032, 0x01, tmp_num/5, speed_bars_2);
+
+	  // Check and write the inputs:
+	  sprintf(inputs_vis, "%d", Inputs_CheckZero(&inputs));
+	  LS032_TextReg_SetString(&ls032, 0x04, strlen(inputs_vis), inputs_vis);
 
 
 	  LS032_UpdateAsync(&ls032);

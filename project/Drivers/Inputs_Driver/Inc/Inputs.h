@@ -34,6 +34,7 @@ typedef struct
 } Inputs_HandleTypeDef;
 
 uint8_t Inputs_CheckInput(Inputs_HandleTypeDef *inputs, uint8_t input);
+uint8_t Inputs_CheckZero(Inputs_HandleTypeDef *inputs);
 uint8_t Inputs_CheckAll(Inputs_HandleTypeDef *inputs);
 
 #endif /* INPUTS_DRIVER_INC_INPUTS_H_ */

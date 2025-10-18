@@ -20,8 +20,8 @@ void delay_us(uint32_t us) {
 
 void get_gate_addr(uint16_t gate_addr, uint8_t *bytes) {
 
-	//gate_addr = LS032_PIXEL_WIDTH - gate_addr;			// gate is 1 indexed
-	gate_addr++;			// gate is 1 indexed
+	gate_addr = LS032_PIXEL_WIDTH - gate_addr;			// gate is 1 indexed (FLIPPED)
+	//gate_addr++;										// gate is 1 indexed (NORMAL)
 	bytes[0] = 0b10000000; 	// Mode select (M0=H, M1=L, M2=L)
 
 	// This shoves 10 bits into B0 and B1, while flipping the endianness

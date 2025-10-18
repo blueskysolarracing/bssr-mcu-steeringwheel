@@ -30,6 +30,15 @@ uint8_t Inputs_CheckInput(Inputs_HandleTypeDef *inputs, uint8_t input) {
 	return SUCCESS;
 }
 
+uint8_t Inputs_CheckZero(Inputs_HandleTypeDef *inputs) {
+	HAL_GPIO_WritePin(inputs->sel_gpio_handles[3], inputs->sel_gpio_pins[3], 0);
+	HAL_GPIO_WritePin(inputs->sel_gpio_handles[2], inputs->sel_gpio_pins[2], 0);
+	HAL_GPIO_WritePin(inputs->sel_gpio_handles[1], inputs->sel_gpio_pins[1], 0);
+	HAL_GPIO_WritePin(inputs->sel_gpio_handles[0], inputs->sel_gpio_pins[0], 0);
+
+	return HAL_GPIO_ReadPin(inputs->state_gpio_handle, inputs->state_gpio_pin);
+}
+
 uint8_t Inputs_CheckAll(Inputs_HandleTypeDef *inputs) {
 	for (uint8_t i = 0; i < NUM_INPUTS; i++) {
 		Inputs_CheckInput(inputs, i);
