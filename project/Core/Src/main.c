@@ -50,8 +50,12 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+#define DEFAULT_FLTLIGHT_MODE 3
+#define DEFAULT_INDLIGHT_MODE 0
 
-#define SCREEN_BRIGHTNESS 5000
+#define DEFAULT_SCREEN_BRIGHTNESS 5000
+#define DEFAULT_FLTLIGHT_BRIGHTNESS 1000
+#define DEFAULT_INDLIGHT_BRIGHTNESS 2000
 
 // LS032 Memory allocations
 LS032_HandleTypeDef ls032;
@@ -81,15 +85,21 @@ uint16_t input_sel_gpio_pins[4] = {
 uint8_t spi1_tx_queued = 0;
 uint8_t spi1_rx_buf[257] = {0};
 
-uint8_t lights_flt_mode = 0;
-uint8_t lights_ind_mode = 0;
+// Light controls
+uint8_t  lights_flt_mode = DEFAULT_FLTLIGHT_MODE;
+uint8_t  lights_ind_mode = DEFAULT_INDLIGHT_MODE;
+uint16_t lights_flt_brightness  = DEFAULT_FLTLIGHT_BRIGHTNESS;
+uint16_t lights_ind_brightness  = DEFAULT_INDLIGHT_BRIGHTNESS;
+uint16_t lights_read_brightness = DEFAULT_SCREEN_BRIGHTNESS;
+
+
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void Command_UPDATE_LIGHTS();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -137,20 +147,12 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-	// FAULT LIGHT PWM:
-	TIM4->CCR1 = 5000;
+  // SET UP LIGHTS
+  Command_UPDATE_LIGHTS();
+
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
-
-	// READ LIGHT PWM:
-	TIM4->CCR3 = 5000;
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
-
-	// LEFT IND:
-	TIM3->CCR2 = 1000;
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-
-	// RIGHT IND:
-	TIM3->CCR3 = 1000;
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
 
 
@@ -209,7 +211,7 @@ int main(void)
 	  Inputs_CheckAll(&inputs);
 	  // Screen Brightness
 	  if ((inputs.states >> 8) & 0b1) {
-		  TIM4->CCR3 = SCREEN_BRIGHTNESS;
+		  TIM4->CCR3 = lights_read_brightness;
 	  } else {
 		  TIM4->CCR3 = 0;
 	  }
@@ -275,6 +277,26 @@ void u16ToStr(uint16_t in, char* str) {
 	}
 }
 
+void Command_UPDATE_LIGHTS() {
+	// FAULT LIGHT:
+	if (lights_flt_mode)
+		TIM4->CCR1 = lights_flt_brightness;
+	else
+		TIM4->CCR1 = 0;
+
+	// LEFT IND:
+	if (lights_ind_mode & 0b1)
+		TIM3->CCR2 = lights_ind_brightness;
+	else
+		TIM3->CCR2 = 0;
+
+	// RIGHT IND:
+	if (lights_ind_mode & 0b10)
+		TIM3->CCR3 = lights_ind_brightness;
+	else
+		TIM3->CCR3 = 0;
+}
+
 void Handle_SPI1_RX_START() {
 	// Reset the buffer and start DMA
 	memset(spi1_rx_buf, 0x00, 257);
@@ -315,10 +337,22 @@ void Handle_SPI1_RX_CPLT() {
 		spi1_tx_queued = 1;
 	} else if (spi1_rx_buf[0] == 0x01) {
 		// FAULT LIGHT CTRL
-		lights_flt_mode = spi1_rx_buf[1];
+		if (spi1_rx_buf[1] <= 3) {
+			lights_flt_mode = spi1_rx_buf[1];
+			Command_UPDATE_LIGHTS();
+		}
 	} else if (spi1_rx_buf[0] == 0x02) {
 		// IND. LIGHT CTRL
-		lights_ind_mode = spi1_rx_buf[1];
+		if (spi1_rx_buf[1] <= 3) {
+			lights_ind_mode = spi1_rx_buf[1];
+			Command_UPDATE_LIGHTS();
+		}
+	} else if (spi1_rx_buf[0] == 0x03) {
+		// READ LIGHT BRIGHTNESS
+		if (spi1_rx_buf[1] <= 100) {
+			lights_read_brightness = (uint16_t)(spi1_rx_buf[1])*100;
+			Command_UPDATE_LIGHTS();
+		}
 	} else {
 		// Invalid Command
 		return;
