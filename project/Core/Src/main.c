@@ -51,7 +51,7 @@
 
 /* USER CODE BEGIN PV */
 
-#define SCREEN_BRIGHTNESS 10000
+#define SCREEN_BRIGHTNESS 5000
 
 // LS032 Memory allocations
 LS032_HandleTypeDef ls032;
