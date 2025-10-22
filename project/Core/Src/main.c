@@ -51,6 +51,8 @@
 
 /* USER CODE BEGIN PV */
 
+#define SCREEN_BRIGHTNESS 10000
+
 // LS032 Memory allocations
 LS032_HandleTypeDef ls032;
 uint8_t ls032_vram[LS032_VRAM_HEIGHT*LS032_PIXEL_WIDTH + 2] = {0};
@@ -132,7 +134,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 	// FAULT LIGHT PWM:
-	TIM4->CCR1 = 500;
+	TIM4->CCR1 = 5000;
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
 
 	// READ LIGHT PWM:
@@ -140,11 +142,11 @@ int main(void)
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
 
 	// LEFT IND:
-	TIM3->CCR2 = 0;
+	TIM3->CCR2 = 1000;
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
 
 	// RIGHT IND:
-	TIM3->CCR3 = 0;
+	TIM3->CCR3 = 1000;
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
 
 
@@ -170,6 +172,10 @@ int main(void)
 		// TODO: Error Handle
 	}
 
+	LS032_Clear(&ls032);
+	LS032_DrawLogo(&ls032);
+	LS032_UpdateManual(&ls032);
+
 	// SET UP THE INPUTS LIBRARY
 	inputs.sel_gpio_handles = input_sel_gpio_ports;
 	inputs.sel_gpio_pins = input_sel_gpio_pins;
@@ -177,36 +183,33 @@ int main(void)
 	inputs.it_gpio_pin = INPUT_IT_Pin;
 	inputs.state_gpio_handle = INPUT_STATE_GPIO_Port;
 	inputs.state_gpio_pin = INPUT_STATE_Pin;
-	inputs.states = 0x0000;
-	inputs.states_itmask = 0xFFFF;
+	inputs.states = 0xFFFF;
+	inputs.states_itmask = 0b0000111111111111;
 
-	LS032_DrawLogo(&ls032);
-	//LS032_Update(&ls032);
-
-	uint8_t tmp_num = 0;
-	char speed_letters[255];
-	char speed_bars_1[255];
-	char speed_bars_2[255];
-	char *speed_units = "KM/H";
-	char inputs_vis[255];
-
-	memset(speed_bars_1, '/', 255);
-	memset(speed_bars_2, '\\', 255);
-
-	LS032_TextReg_SetPos(&ls032, 0x02, 380, 26);
-	LS032_TextReg_SetSize(&ls032, 0x02, 3);
-
-	LS032_TextReg_SetString(&ls032, 0x03, strlen(speed_units), speed_units);
-	LS032_TextReg_SetPos(&ls032, 0x03, 420, 24);
-	LS032_TextReg_SetSize(&ls032, 0x03, 1);
-
-	LS032_TextReg_SetPos(&ls032, 0x00, 0, 30);
-	LS032_TextReg_SetSize(&ls032, 0x00, 1);
-	LS032_TextReg_SetPos(&ls032, 0x01, 0, 34);
-	LS032_TextReg_SetSize(&ls032, 0x01, 1);
-
-	LS032_TextReg_SetPos(&ls032, 0x04, 00, 0);
-	LS032_TextReg_SetSize(&ls032, 0x04, 1);
+//	uint8_t tmp_num = 0;
+//	char speed_letters[255];
+//	char speed_bars_1[255];
+//	char speed_bars_2[255];
+//	char *speed_units = "KM/H";
+//	char inputs_vis[255];
+//
+//	memset(speed_bars_1, '/', 255);
+//	memset(speed_bars_2, '\\', 255);
+//
+//	LS032_TextReg_SetPos(&ls032, 0x02, 380, 26);
+//	LS032_TextReg_SetSize(&ls032, 0x02, 3);
+//
+//	LS032_TextReg_SetString(&ls032, 0x03, strlen(speed_units), speed_units);
+//	LS032_TextReg_SetPos(&ls032, 0x03, 420, 24);
+//	LS032_TextReg_SetSize(&ls032, 0x03, 1);
+//
+//	LS032_TextReg_SetPos(&ls032, 0x00, 0, 30);
+//	LS032_TextReg_SetSize(&ls032, 0x00, 1);
+//	LS032_TextReg_SetPos(&ls032, 0x01, 0, 34);
+//	LS032_TextReg_SetSize(&ls032, 0x01, 1);
+//
+//	LS032_TextReg_SetPos(&ls032, 0x04, 00, 0);
+//	LS032_TextReg_SetSize(&ls032, 0x04, 1);
 
   /* USER CODE END 2 */
 
@@ -218,31 +221,38 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  sprintf(speed_letters, "%d", tmp_num);
-
-	  LS032_Clear(&ls032);
-
-	  LS032_TextReg_SetString(&ls032, 0x02, strlen(speed_letters), speed_letters);
-
-	  LS032_TextReg_SetPos(&ls032, 0x00, (tmp_num % 5)*4, 30);
-	  LS032_TextReg_SetPos(&ls032, 0x01, (tmp_num % 5)*4, 34);
-	  LS032_TextReg_SetString(&ls032, 0x00, tmp_num/5, speed_bars_1);
-	  LS032_TextReg_SetString(&ls032, 0x01, tmp_num/5, speed_bars_2);
-
-	  // Check and write the inputs:
-	  sprintf(inputs_vis, "%d", Inputs_CheckZero(&inputs));
-	  LS032_TextReg_SetString(&ls032, 0x04, strlen(inputs_vis), inputs_vis);
+//	  sprintf(speed_letters, "%d", tmp_num);
+//
+//
+//	  LS032_TextReg_SetString(&ls032, 0x02, strlen(speed_letters), speed_letters);
+//
+//	  LS032_TextReg_SetPos(&ls032, 0x00, (tmp_num % 5)*4, 30);
+//	  LS032_TextReg_SetPos(&ls032, 0x01, (tmp_num % 5)*4, 34);
+//	  LS032_TextReg_SetString(&ls032, 0x00, tmp_num/5, speed_bars_1);
+//	  LS032_TextReg_SetString(&ls032, 0x01, tmp_num/5, speed_bars_2);
+//
+//	  u16ToStr(inputs.states, inputs_vis);
+//	  //sprintf(inputs_vis, "%04X", inputs.states);
+//	  LS032_TextReg_SetString(&ls032, 0x04, 16, inputs_vis);
 
 
 	  LS032_UpdateAsync(&ls032);
 
-	  tmp_num += 1;
-	  if (tmp_num > 99)
-		  tmp_num = 0;
+//	  tmp_num += 1;
+//	  if (tmp_num > 99)
+//		  tmp_num = 0;
 
+	  // Delay for screen refresh
 	  HAL_Delay(30);
-//	LS032B7DD02_Clear(&ls032);
-//	LS032B7DD02_Update(&ls032);
+
+	  // Handle inputs:
+	  Inputs_CheckAll(&inputs);
+	  // Screen Brightness
+	  if ((inputs.states >> 8) & 0b1) {
+		  TIM4->CCR3 = SCREEN_BRIGHTNESS;
+	  } else {
+		  TIM4->CCR3 = 0;
+	  }
   }
   /* USER CODE END 3 */
 }
@@ -297,6 +307,13 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 // ------------------------------------------------------------ HELPER FUNCTIONS -- //
+
+void u16ToStr(uint16_t in, char* str) {
+	for (uint8_t bit = 0; bit < 16; bit++) {
+		if ((in >> bit) & 0b1) str[bit] = '1';
+		else str[bit] = '0';
+	}
+}
 
 void Handle_SPI1_RX_START() {
 	// Reset the buffer and start DMA

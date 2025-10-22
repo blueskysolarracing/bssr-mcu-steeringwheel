@@ -74,13 +74,40 @@ uint8_t LS032_Init(LS032_HandleTypeDef *ls032) {
 
 	delay_us(30);
 	// Need to clear twice for some reason
-	//LS032_Wipe(ls032);
-	//LS032_Wipe(ls032);
+	LS032_Wipe(ls032);
+	LS032_Wipe(ls032);
 	delay_us(30);
 	HAL_GPIO_WritePin(ls032->disp_gpio_handle, ls032->disp_gpio_pin, GPIO_PIN_SET);
 	delay_us(30);
 	HAL_TIM_PWM_Start(ls032->extcomin_tim_handle, ls032->extcomin_channel);
 	delay_us(30);
+
+	return SUCCESS;
+}
+
+uint8_t LS032_TX(LS032_HandleTypeDef *ls032, uint8_t *pData, uint16_t len) {
+	if (ls032->spi_state != 0) return ERROR;
+
+	// Clear update queue
+	ls032->update_queued = 0;
+
+	uint8_t ret = 0;
+
+	// Assert the CS high
+	HAL_GPIO_WritePin(ls032->cs_gpio_handle, ls032->cs_gpio_pin, GPIO_PIN_SET);
+	delay_us(3);
+	ret = HAL_SPI_Transmit(ls032->spi_handle, pData, len, 100);
+	delay_us(1);
+	if (ret) {
+		// Release the CS
+		HAL_GPIO_WritePin(ls032->cs_gpio_handle, ls032->cs_gpio_pin, GPIO_PIN_RESET);
+		ls032->spi_state = 0;
+		return ret;
+	}
+
+	// Release the CS
+	HAL_GPIO_WritePin(ls032->cs_gpio_handle, ls032->cs_gpio_pin, GPIO_PIN_RESET);
+
 	return SUCCESS;
 }
 
@@ -168,13 +195,14 @@ uint8_t LS032_UpdateManual(LS032_HandleTypeDef *ls032) {
 
 uint8_t LS032_UpdateAsync(LS032_HandleTypeDef *ls032) {
 	if (ls032->update_queued == 0) return ERROR;
+	LS032_Clear(ls032);
 	if (LS032_DrawScene(ls032)) return ERROR;
 	return LS032_TX_DMA(ls032, ls032->vram, ls032->vram_len);
 }
 
 uint8_t LS032_Wipe(LS032_HandleTypeDef *ls032) {
 	uint8_t clear_cmd[2] = {0x20, 0x00};
-	return LS032_TX_DMA(ls032, clear_cmd, 2);
+	return LS032_TX(ls032, clear_cmd, 2);
 }
 
 uint8_t LS032_Clear(LS032_HandleTypeDef *ls032) {

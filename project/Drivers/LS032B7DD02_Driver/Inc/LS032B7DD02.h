@@ -74,6 +74,7 @@ typedef struct
 
 // Commands
 uint8_t LS032_Init(LS032_HandleTypeDef *ls032);
+uint8_t LS032_TX(LS032_HandleTypeDef *ls032, uint8_t *data, uint16_t len);
 uint8_t LS032_TX_DMA(LS032_HandleTypeDef *ls032, uint8_t *data, uint16_t len);
 uint8_t LS032_TX_DMA_CPLT(LS032_HandleTypeDef *ls032);
 

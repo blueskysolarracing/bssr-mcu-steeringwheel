@@ -19,9 +19,9 @@ uint8_t Inputs_CheckInput(Inputs_HandleTypeDef *inputs, uint8_t input) {
 
 	// Write state changes
 	if (HAL_GPIO_ReadPin(inputs->state_gpio_handle, inputs->state_gpio_pin))
-		inputs->states |= (0x0001 << input);
+		inputs->states |= (0x0001 << (uint16_t)input);
 	else
-		inputs->states &= (0xFFFE << input);
+		inputs->states &= 0xFFFF ^ (0x0001 << (uint16_t)input);
 
 	// Check if the masked buttons have changed
 	if ((old_state & inputs->states_itmask) != (inputs->states & inputs->states_itmask))
@@ -40,6 +40,7 @@ uint8_t Inputs_CheckZero(Inputs_HandleTypeDef *inputs) {
 }
 
 uint8_t Inputs_CheckAll(Inputs_HandleTypeDef *inputs) {
+	inputs->states = 0xFFFF;
 	for (uint8_t i = 0; i < NUM_INPUTS; i++) {
 		Inputs_CheckInput(inputs, i);
 	}
