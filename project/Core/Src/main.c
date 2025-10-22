@@ -78,7 +78,11 @@ uint16_t input_sel_gpio_pins[4] = {
 };
 
 // SPI RX memory allocations
+uint8_t spi1_tx_queued = 0;
 uint8_t spi1_rx_buf[257] = {0};
+
+uint8_t lights_flt_mode = 0;
+uint8_t lights_ind_mode = 0;
 
 /* USER CODE END PV */
 
@@ -186,31 +190,6 @@ int main(void)
 	inputs.states = 0xFFFF;
 	inputs.states_itmask = 0b0000111111111111;
 
-//	uint8_t tmp_num = 0;
-//	char speed_letters[255];
-//	char speed_bars_1[255];
-//	char speed_bars_2[255];
-//	char *speed_units = "KM/H";
-//	char inputs_vis[255];
-//
-//	memset(speed_bars_1, '/', 255);
-//	memset(speed_bars_2, '\\', 255);
-//
-//	LS032_TextReg_SetPos(&ls032, 0x02, 380, 26);
-//	LS032_TextReg_SetSize(&ls032, 0x02, 3);
-//
-//	LS032_TextReg_SetString(&ls032, 0x03, strlen(speed_units), speed_units);
-//	LS032_TextReg_SetPos(&ls032, 0x03, 420, 24);
-//	LS032_TextReg_SetSize(&ls032, 0x03, 1);
-//
-//	LS032_TextReg_SetPos(&ls032, 0x00, 0, 30);
-//	LS032_TextReg_SetSize(&ls032, 0x00, 1);
-//	LS032_TextReg_SetPos(&ls032, 0x01, 0, 34);
-//	LS032_TextReg_SetSize(&ls032, 0x01, 1);
-//
-//	LS032_TextReg_SetPos(&ls032, 0x04, 00, 0);
-//	LS032_TextReg_SetSize(&ls032, 0x04, 1);
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -221,26 +200,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-//	  sprintf(speed_letters, "%d", tmp_num);
-//
-//
-//	  LS032_TextReg_SetString(&ls032, 0x02, strlen(speed_letters), speed_letters);
-//
-//	  LS032_TextReg_SetPos(&ls032, 0x00, (tmp_num % 5)*4, 30);
-//	  LS032_TextReg_SetPos(&ls032, 0x01, (tmp_num % 5)*4, 34);
-//	  LS032_TextReg_SetString(&ls032, 0x00, tmp_num/5, speed_bars_1);
-//	  LS032_TextReg_SetString(&ls032, 0x01, tmp_num/5, speed_bars_2);
-//
-//	  u16ToStr(inputs.states, inputs_vis);
-//	  //sprintf(inputs_vis, "%04X", inputs.states);
-//	  LS032_TextReg_SetString(&ls032, 0x04, 16, inputs_vis);
-
-
 	  LS032_UpdateAsync(&ls032);
-
-//	  tmp_num += 1;
-//	  if (tmp_num > 99)
-//		  tmp_num = 0;
 
 	  // Delay for screen refresh
 	  HAL_Delay(30);
@@ -350,9 +310,18 @@ void Handle_SPI1_RX_CPLT() {
 			default:
 				break;
 		}
-	} else {
+	} else if (spi1_rx_buf[0] == 0x00) {
 		// INPUT CMD
-		//TODO: Return values
+		spi1_tx_queued = 1;
+	} else if (spi1_rx_buf[0] == 0x01) {
+		// FAULT LIGHT CTRL
+		lights_flt_mode = spi1_rx_buf[1];
+	} else if (spi1_rx_buf[0] == 0x02) {
+		// IND. LIGHT CTRL
+		lights_ind_mode = spi1_rx_buf[1];
+	} else {
+		// Invalid Command
+		return;
 	}
 }
 
@@ -366,6 +335,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  } else {
 		  // SPI CS was just asserted
 		  Handle_SPI1_RX_START();
+		  // Check if we have to send something to the Toradex
+		  if (spi1_tx_queued) {
+			  // TODO: Add analog reading to this
+			  uint8_t tx_data[2] = {(inputs.states & 0xFF00) >> 8, inputs.states & 0x00FF};
+			  HAL_SPI_Transmit_IT(&hspi1, tx_data, 2);
+			  spi1_tx_queued = 0;
+		  }
 	  }
   } else {
       __NOP();
