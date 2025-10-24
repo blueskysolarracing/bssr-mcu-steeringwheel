@@ -59,18 +59,12 @@ uint8_t LS032_Init(LS032_HandleTypeDef *ls032) {
 	}
 
 	// Initialize register RAM
-	for (uint8_t reg = 0; reg < LS032_NUMREGISTERS; reg++) {
-		ls032->registers[reg].pos_x = 0;
-		ls032->registers[reg].pos_y = 0;
-		ls032->registers[reg].size = 0;
-		ls032->registers[reg].mode = 0;
-		ls032->registers[reg].len = 0;
-		memset(ls032->registers[reg].str, 0x00, 0xFF);
-	}
+	LS032_ResetRegisters(ls032);
 
 	// Flag SPI as Idle
 	ls032->spi_state = 0;
 	ls032->update_queued = 0;
+	ls032->flash_counter = 0;
 
 	delay_us(30);
 	// Need to clear twice for some reason
@@ -194,7 +188,11 @@ uint8_t LS032_UpdateManual(LS032_HandleTypeDef *ls032) {
 }
 
 uint8_t LS032_UpdateAsync(LS032_HandleTypeDef *ls032) {
+	// Increment flash counter even if nothing gets drawn
+	LS032_UpdateFlash(ls032);
+
 	if (ls032->update_queued == 0) return ERROR;
+
 	LS032_Clear(ls032);
 	if (LS032_DrawScene(ls032)) return ERROR;
 	return LS032_TX_DMA(ls032, ls032->vram, ls032->vram_len);
@@ -221,8 +219,36 @@ uint8_t LS032_Fill(LS032_HandleTypeDef *ls032) {
 	return SUCCESS;
 }
 
+uint8_t LS032_ResetRegisters(LS032_HandleTypeDef *ls032) {
+	for (uint8_t reg = 0; reg < LS032_NUMREGISTERS; reg++) {
+		ls032->registers[reg].pos_x = 0;
+		ls032->registers[reg].pos_y = 0;
+		ls032->registers[reg].size = 0;
+		ls032->registers[reg].mode = 0;
+		ls032->registers[reg].flash_state = 0;
+		ls032->registers[reg].len = 0;
+		memset(ls032->registers[reg].str, 0x00, 0xFF);
+	}
+	return SUCCESS;
+}
+
+uint8_t LS032_UpdateFlash(LS032_HandleTypeDef *ls032) {
+	ls032->flash_counter++;
+	for (uint8_t reg = 0; reg < LS032_NUMREGISTERS; reg++) {
+		if (ls032->registers[reg].mode == 0) continue;
+		uint8_t new_flash = ((ls032->flash_counter) >> (ls032->registers[reg].mode - 1)) & 0b1;
+		if (new_flash != ls032->registers[reg].flash_state) {
+			ls032->registers[reg].flash_state = new_flash;
+			ls032->update_queued = 1;
+		}
+	}
+
+	return SUCCESS;
+}
+
 uint8_t LS032_DrawRegister(LS032_HandleTypeDef *ls032, uint8_t reg) {
 	if (reg >= LS032_NUMREGISTERS) return ERROR;
+	if (ls032->registers[reg].flash_state) return SUCCESS;
 
 	return LS032_DrawString(ls032,
 			ls032->registers[reg].pos_x,

@@ -50,7 +50,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-#define DEFAULT_FLTLIGHT_MODE 3
+#define DEFAULT_FLTLIGHT_MODE 0
 #define DEFAULT_INDLIGHT_MODE 0
 
 #define DEFAULT_SCREEN_BRIGHTNESS 5000
@@ -84,6 +84,7 @@ uint16_t input_sel_gpio_pins[4] = {
 // SPI RX memory allocations
 uint8_t spi1_tx_queued = 0;
 uint8_t spi1_rx_buf[257] = {0};
+uint8_t spi1_tx_buf[257] = {0};
 
 // Light controls
 uint8_t  lights_flt_mode = DEFAULT_FLTLIGHT_MODE;
@@ -99,6 +100,7 @@ uint16_t lights_read_brightness = DEFAULT_SCREEN_BRIGHTNESS;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+
 void Command_UPDATE_LIGHTS();
 /* USER CODE END PFP */
 
@@ -298,9 +300,13 @@ void Command_UPDATE_LIGHTS() {
 }
 
 void Handle_SPI1_RX_START() {
-	// Reset the buffer and start DMA
+	// Reset the buffers and start DMA
 	memset(spi1_rx_buf, 0x00, 257);
-	HAL_SPI_Receive_DMA(&hspi1, spi1_rx_buf, 257);
+	//memset(spi1_tx_buf, 0x00, 257);
+	spi1_tx_buf[0] = (inputs.states & 0xFF00) >> 8;
+	spi1_tx_buf[1] = inputs.states & 0x00FF;
+
+	HAL_SPI_TransmitReceive_DMA(&hspi1, spi1_tx_buf, spi1_rx_buf, 257);
 }
 
 void Handle_SPI1_RX_CPLT() {
@@ -369,13 +375,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  } else {
 		  // SPI CS was just asserted
 		  Handle_SPI1_RX_START();
-		  // Check if we have to send something to the Toradex
-		  if (spi1_tx_queued) {
-			  // TODO: Add analog reading to this
-			  uint8_t tx_data[2] = {(inputs.states & 0xFF00) >> 8, inputs.states & 0x00FF};
-			  HAL_SPI_Transmit_IT(&hspi1, tx_data, 2);
-			  spi1_tx_queued = 0;
-		  }
 	  }
   } else {
       __NOP();

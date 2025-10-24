@@ -31,6 +31,8 @@ typedef struct
 
 	uint8_t				mode;
 
+	uint8_t				flash_state;
+
 	uint8_t				len;
 
 	char				*str;
@@ -67,6 +69,8 @@ typedef struct
 
 	LS032_TextReg		*registers;
 
+	uint8_t				flash_counter;			// a counter for flashing elements
+
 } LS032_HandleTypeDef;
 
 	// FUNCS
@@ -90,6 +94,8 @@ uint8_t LS032_UpdateManual(LS032_HandleTypeDef *ls032);
 uint8_t LS032_UpdateAsync(LS032_HandleTypeDef *ls032);
 uint8_t LS032_Wipe(LS032_HandleTypeDef *ls032);
 
+uint8_t LS032_ResetRegisters(LS032_HandleTypeDef *ls032);
+uint8_t LS032_UpdateFlash(LS032_HandleTypeDef *ls032);
 uint8_t LS032_DrawRegister(LS032_HandleTypeDef *ls032, uint8_t reg);
 uint8_t LS032_DrawScene(LS032_HandleTypeDef *ls032);
 
