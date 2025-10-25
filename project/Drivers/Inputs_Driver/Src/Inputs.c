@@ -17,6 +17,8 @@ uint8_t Inputs_CheckInput(Inputs_HandleTypeDef *inputs, uint8_t input) {
 
 	uint8_t old_state = inputs->states;
 
+	HAL_Delay(2);
+
 	// Write state changes
 	if (HAL_GPIO_ReadPin(inputs->state_gpio_handle, inputs->state_gpio_pin))
 		inputs->states |= (0x0001 << (uint16_t)input);
@@ -44,6 +46,7 @@ uint8_t Inputs_CheckAll(Inputs_HandleTypeDef *inputs) {
 	for (uint8_t i = 0; i < NUM_INPUTS; i++) {
 		Inputs_CheckInput(inputs, i);
 	}
+	inputs->states ^= inputs->states_invertmask;
 
 	return SUCCESS;
 }

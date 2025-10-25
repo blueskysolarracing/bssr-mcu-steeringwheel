@@ -193,6 +193,7 @@ int main(void)
 	inputs.state_gpio_pin = INPUT_STATE_Pin;
 	inputs.states = 0xFFFF;
 	inputs.states_itmask = 0b0000111111111111;
+	inputs.states_invertmask = 0b0000001111000000;
 
   /* USER CODE END 2 */
 
@@ -207,7 +208,8 @@ int main(void)
 	  LS032_UpdateAsync(&ls032);
 
 	  // Delay for screen refresh
-	  HAL_Delay(30);
+	  // DELAY IS BUILT INTO INPUTS_CHECKALL
+	  //HAL_Delay(30);
 
 	  // Handle inputs:
 	  Inputs_CheckAll(&inputs);

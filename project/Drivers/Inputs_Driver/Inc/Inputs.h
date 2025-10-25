@@ -31,6 +31,8 @@ typedef struct
 
 	uint16_t			states_itmask;			// Mask of states that trigger the interrupt
 
+	uint16_t			states_invertmask;		// Inputs to invert
+
 } Inputs_HandleTypeDef;
 
 uint8_t Inputs_CheckInput(Inputs_HandleTypeDef *inputs, uint8_t input);
