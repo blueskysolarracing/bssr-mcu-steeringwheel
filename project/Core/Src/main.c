@@ -208,8 +208,7 @@ int main(void)
 	  LS032_UpdateAsync(&ls032);
 
 	  // Delay for screen refresh
-	  // DELAY IS BUILT INTO INPUTS_CHECKALL
-	  //HAL_Delay(30);
+	  HAL_Delay(30);
 
 	  // Handle inputs:
 	  Inputs_CheckAll(&inputs);
