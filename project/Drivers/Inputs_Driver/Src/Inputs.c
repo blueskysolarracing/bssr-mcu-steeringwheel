@@ -15,6 +15,9 @@ uint8_t Inputs_CheckInput(Inputs_HandleTypeDef *inputs, uint8_t input) {
 	HAL_GPIO_WritePin(inputs->sel_gpio_handles[1], inputs->sel_gpio_pins[1], input & 0b0010);
 	HAL_GPIO_WritePin(inputs->sel_gpio_handles[0], inputs->sel_gpio_pins[0], input & 0b0001);
 
+	// Let things settle
+	HAL_Delay(2);
+
 	uint8_t old_state = inputs->states;
 
 	// Write state changes
@@ -40,11 +43,15 @@ uint8_t Inputs_CheckZero(Inputs_HandleTypeDef *inputs) {
 }
 
 uint8_t Inputs_CheckAll(Inputs_HandleTypeDef *inputs) {
-	inputs->states = 0xFFFF;
+	//inputs->states = 0xFFFF;
 	for (uint8_t i = 0; i < NUM_INPUTS; i++) {
 		Inputs_CheckInput(inputs, i);
 	}
 	inputs->states ^= inputs->states_invertmask;
+
+	inputs->spi_tx[0] = (uint8_t)(inputs->states & 0x00FF);
+	inputs->spi_tx[1] = (uint8_t)((inputs->states >> 8) & 0x00FF);
+	//inputs->spi_tx[2] = inputs->spi_tx[0] ^ inputs->spi_tx[1]; // CHECKSUM
 
 	return SUCCESS;
 }

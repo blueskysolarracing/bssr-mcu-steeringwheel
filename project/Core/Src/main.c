@@ -128,6 +128,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  memset(spi1_tx_buf, 0x00, 257);
 
   /* USER CODE END Init */
 
@@ -194,6 +195,7 @@ int main(void)
 	inputs.states = 0xFFFF;
 	inputs.states_itmask = 0b0000111111111111;
 	inputs.states_invertmask = 0b0000001111000000;
+	inputs.spi_tx = spi1_tx_buf;
 
   /* USER CODE END 2 */
 
@@ -208,15 +210,15 @@ int main(void)
 	  LS032_UpdateAsync(&ls032);
 
 	  // Delay for screen refresh
-	  HAL_Delay(30);
+	  //HAL_Delay(30);
 
 	  // Handle inputs:
 	  Inputs_CheckAll(&inputs);
 	  // Screen Brightness
-	  if ((inputs.states >> 8) & 0b1) {
-		  TIM4->CCR3 = lights_read_brightness;
-	  } else {
+	  if ((inputs.states >> 9) & 0b1) {
 		  TIM4->CCR3 = 0;
+	  } else {
+		  TIM4->CCR3 = lights_read_brightness;
 	  }
   }
   /* USER CODE END 3 */
@@ -301,12 +303,7 @@ void Command_UPDATE_LIGHTS() {
 }
 
 void Handle_SPI1_RX_START() {
-	// Reset the buffers and start DMA
-	memset(spi1_rx_buf, 0x00, 257);
-	//memset(spi1_tx_buf, 0x00, 257);
-	spi1_tx_buf[0] = (inputs.states & 0xFF00) >> 8;
-	spi1_tx_buf[1] = inputs.states & 0x00FF;
-
+	// Start DMA
 	HAL_SPI_TransmitReceive_DMA(&hspi1, spi1_tx_buf, spi1_rx_buf, 257);
 }
 
@@ -360,10 +357,10 @@ void Handle_SPI1_RX_CPLT() {
 			lights_read_brightness = (uint16_t)(spi1_rx_buf[1])*100;
 			Command_UPDATE_LIGHTS();
 		}
-	} else {
-		// Invalid Command
-		return;
 	}
+
+	// Reset the buffers
+	memset(spi1_rx_buf, 0x00, 257);
 }
 
 // ------------------------------------------------------------ OVERRIDE EXTERNAL INTERRUPTS -- //
