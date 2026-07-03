@@ -1,9 +1,9 @@
 ../Core/Src/main.c:117:5:main	4
-../Core/Src/main.c:242:6:SystemClock_Config	4
-../Core/Src/main.c:289:6:u16ToStr	3
-../Core/Src/main.c:296:6:Command_UPDATE_LIGHTS	4
-../Core/Src/main.c:316:6:Handle_SPI1_RX_START	1
-../Core/Src/main.c:324:6:Handle_SPI1_RX_CPLT	13
-../Core/Src/main.c:382:6:HAL_GPIO_EXTI_Callback	3
-../Core/Src/main.c:398:6:HAL_SPI_TxCpltCallback	2
-../Core/Src/main.c:411:6:Error_Handler	1
+../Core/Src/main.c:248:6:SystemClock_Config	4
+../Core/Src/main.c:295:6:u16ToStr	3
+../Core/Src/main.c:302:6:Command_UPDATE_LIGHTS	4
+../Core/Src/main.c:322:6:Handle_SPI1_RX_START	1
+../Core/Src/main.c:330:6:Handle_SPI1_RX_CPLT	13
+../Core/Src/main.c:388:6:HAL_GPIO_EXTI_Callback	3
+../Core/Src/main.c:404:6:HAL_SPI_TxCpltCallback	2
+../Core/Src/main.c:417:6:Error_Handler	1
