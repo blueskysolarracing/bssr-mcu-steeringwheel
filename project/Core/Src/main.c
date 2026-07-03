@@ -228,14 +228,14 @@ int main(void)
 
 	  // Check the watchdog
 	  if (HAL_GetTick() - spi1_watchdog_t >= 1000) {
-		  spi1_watchdog_t = HAL_GetTick();
-
-		  LS032_Clear(&ls032);
-		  char* nosig_str = "NO SIGNAL";
-		  LS032_DrawString(&ls032, 0, 7, 16, strlen(nosig_str), nosig_str);
-		  LS032_UpdateManual(&ls032);
-		  Handle_SPI1_RX_START();
-		  //NVIC_SystemReset();
+//		  spi1_watchdog_t = HAL_GetTick();
+//
+//		  LS032_Clear(&ls032);
+//		  char* nosig_str = "NO SIGNAL";
+//		  LS032_DrawString(&ls032, 325, 1, 4, 9, nosig_str);
+//		  LS032_UpdateManual(&ls032);
+//		  Handle_SPI1_RX_START();
+		  NVIC_SystemReset();
 	  }
   }
   /* USER CODE END 3 */
