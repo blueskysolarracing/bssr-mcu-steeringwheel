@@ -50,12 +50,12 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-#define DEFAULT_FLTLIGHT_MODE 0
+#define DEFAULT_FLTLIGHT_MODE 1
 #define DEFAULT_INDLIGHT_MODE 0
 
 #define DEFAULT_SCREEN_BRIGHTNESS 5000
-#define DEFAULT_FLTLIGHT_BRIGHTNESS 1000
-#define DEFAULT_INDLIGHT_BRIGHTNESS 2000
+#define DEFAULT_FLTLIGHT_BRIGHTNESS 200
+#define DEFAULT_INDLIGHT_BRIGHTNESS 5000
 
 // LS032 Memory allocations
 LS032_HandleTypeDef ls032;
@@ -85,6 +85,7 @@ uint16_t input_sel_gpio_pins[4] = {
 uint8_t spi1_tx_queued = 0;
 uint8_t spi1_rx_buf[257] = {0};
 uint8_t spi1_tx_buf[257] = {0};
+uint32_t spi1_watchdog_t = 0;
 
 // Light controls
 uint8_t  lights_flt_mode = DEFAULT_FLTLIGHT_MODE;
@@ -93,8 +94,6 @@ uint16_t lights_flt_brightness  = DEFAULT_FLTLIGHT_BRIGHTNESS;
 uint16_t lights_ind_brightness  = DEFAULT_INDLIGHT_BRIGHTNESS;
 uint16_t lights_read_brightness = DEFAULT_SCREEN_BRIGHTNESS;
 
-
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -102,6 +101,8 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
 void Command_UPDATE_LIGHTS();
+void Handle_SPI1_RX_START();
+void Handle_SPI1_RX_CPLT();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -128,7 +129,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  memset(spi1_tx_buf, 0x00, 257);
+  memset(spi1_tx_buf, 0b01010101, 257); // INVALID BYTES
+  spi1_tx_buf[0] = 0b10101010; // MARKING BYTE
 
   /* USER CODE END Init */
 
@@ -149,6 +151,9 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
+
+  // START THE WATCHDOG
+  spi1_watchdog_t = HAL_GetTick();
 
   // SET UP LIGHTS
   Command_UPDATE_LIGHTS();
@@ -220,6 +225,12 @@ int main(void)
 	  } else {
 		  TIM4->CCR3 = lights_read_brightness;
 	  }
+
+	  // Check the watchdog
+	  if (HAL_GetTick() - spi1_watchdog_t >= 1000) {
+		  Handle_SPI1_RX_START();
+		  //NVIC_SystemReset();
+	  }
   }
   /* USER CODE END 3 */
 }
@@ -264,7 +275,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
   {
@@ -290,20 +301,23 @@ void Command_UPDATE_LIGHTS() {
 		TIM4->CCR1 = 0;
 
 	// LEFT IND:
-	if (lights_ind_mode & 0b1)
+	if (lights_ind_mode & 0b10)
 		TIM3->CCR2 = lights_ind_brightness;
 	else
 		TIM3->CCR2 = 0;
 
 	// RIGHT IND:
-	if (lights_ind_mode & 0b10)
+	if (lights_ind_mode & 0b01)
 		TIM3->CCR3 = lights_ind_brightness;
 	else
 		TIM3->CCR3 = 0;
 }
 
 void Handle_SPI1_RX_START() {
+	// Reset the buffers
+	memset(spi1_rx_buf, 0x00, 257);
 	// Start DMA
+	HAL_SPI_DMAStop(&hspi1);
 	HAL_SPI_TransmitReceive_DMA(&hspi1, spi1_tx_buf, spi1_rx_buf, 257);
 }
 
@@ -359,6 +373,7 @@ void Handle_SPI1_RX_CPLT() {
 		}
 	}
 
+	spi1_watchdog_t = HAL_GetTick();
 	// Reset the buffers
 	memset(spi1_rx_buf, 0x00, 257);
 }
@@ -381,6 +396,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 // ------------------------------------------------------------ OVERRIDE SPI DMA CALLBACKS -- //
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
+	if (hspi != &hspi3) return;
 //	ls032.spi_state = 0;
 //	HAL_GPIO_WritePin(ls032.cs_gpio_handle, ls032.cs_gpio_pin, GPIO_PIN_RESET);
 	LS032_TX_DMA_CPLT(&ls032);

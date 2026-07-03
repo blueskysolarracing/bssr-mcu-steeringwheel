@@ -47,11 +47,13 @@ uint8_t Inputs_CheckAll(Inputs_HandleTypeDef *inputs) {
 	for (uint8_t i = 0; i < NUM_INPUTS; i++) {
 		Inputs_CheckInput(inputs, i);
 	}
+
 	inputs->states ^= inputs->states_invertmask;
 
-	inputs->spi_tx[0] = (uint8_t)(inputs->states & 0x00FF);
-	inputs->spi_tx[1] = (uint8_t)((inputs->states >> 8) & 0x00FF);
-	//inputs->spi_tx[2] = inputs->spi_tx[0] ^ inputs->spi_tx[1]; // CHECKSUM
+	inputs->spi_tx[1] = (uint8_t)(inputs->states & 0x00FF);
+	inputs->spi_tx[2] = (uint8_t)((inputs->states >> 8) & 0x00FF);
+	// CHECKSUM
+	inputs->spi_tx[3] = inputs->spi_tx[1] ^ inputs->spi_tx[2];
 
 	return SUCCESS;
 }

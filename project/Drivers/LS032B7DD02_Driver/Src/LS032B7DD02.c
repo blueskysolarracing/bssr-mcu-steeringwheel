@@ -298,8 +298,8 @@ uint8_t LS032_DrawChar(LS032_HandleTypeDef *ls032, uint16_t pos_x, uint16_t pos_
 	get_idx_from_pos(pos_x, pos_y, &vram_idx);
 
 	// Get distance to edge of screen on X
-	if (LS032_PIXEL_WIDTH - pos_x < char_width)
-		char_width = LS032_PIXEL_WIDTH - pos_x;
+	if (LS032_PIXEL_WIDTH - pos_x - 1 < char_width)
+		char_width = LS032_PIXEL_WIDTH - pos_x - 1;
 
 	// Get distance to edge of screen on Y
 	if (LS032_PIXEL_HEIGHT - pos_y < char_height)
