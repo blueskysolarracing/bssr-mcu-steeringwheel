@@ -18,6 +18,6 @@
 ../Drivers/LS032B7DD02_Driver/Src/LS032B7DD02.c:235:9:LS032_UpdateFlash	4
 ../Drivers/LS032B7DD02_Driver/Src/LS032B7DD02.c:249:9:LS032_DrawRegister	3
 ../Drivers/LS032B7DD02_Driver/Src/LS032B7DD02.c:261:9:LS032_DrawScene	3
-../Drivers/LS032B7DD02_Driver/Src/LS032B7DD02.c:273:9:LS032_DrawLogo	2
-../Drivers/LS032B7DD02_Driver/Src/LS032B7DD02.c:284:9:LS032_DrawChar	6
-../Drivers/LS032B7DD02_Driver/Src/LS032B7DD02.c:315:9:LS032_DrawString	2
+../Drivers/LS032B7DD02_Driver/Src/LS032B7DD02.c:274:9:LS032_DrawLogo	2
+../Drivers/LS032B7DD02_Driver/Src/LS032B7DD02.c:285:9:LS032_DrawChar	6
+../Drivers/LS032B7DD02_Driver/Src/LS032B7DD02.c:316:9:LS032_DrawString	3

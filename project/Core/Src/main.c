@@ -377,11 +377,13 @@ void Handle_SPI1_RX_CPLT() {
 			lights_read_brightness = (uint16_t)(spi1_rx_buf[1])*100;
 			Command_UPDATE_LIGHTS();
 		}
+	} else {
+		memset(spi1_rx_buf, 0x00, 257);
+		return;
 	}
 
-	spi1_watchdog_t = HAL_GetTick();
-	// Reset the buffers
 	memset(spi1_rx_buf, 0x00, 257);
+	spi1_watchdog_t = HAL_GetTick();
 }
 
 // ------------------------------------------------------------ OVERRIDE EXTERNAL INTERRUPTS -- //

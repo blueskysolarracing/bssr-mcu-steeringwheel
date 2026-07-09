@@ -259,12 +259,13 @@ uint8_t LS032_DrawRegister(LS032_HandleTypeDef *ls032, uint8_t reg) {
 }
 
 uint8_t LS032_DrawScene(LS032_HandleTypeDef *ls032) {
+	uint8_t ret = SUCCESS;
 	for (uint8_t reg = 0; reg < LS032_NUMREGISTERS; reg++) {
 		if (LS032_DrawRegister(ls032, reg))
-			return ERROR;
+			ret = ERROR;
 	}
 
-	return SUCCESS;
+	return ret;
 }
 
 // SPECIFIC DRAWING
@@ -302,8 +303,8 @@ uint8_t LS032_DrawChar(LS032_HandleTypeDef *ls032, uint16_t pos_x, uint16_t pos_
 		char_width = LS032_PIXEL_WIDTH - pos_x - 1;
 
 	// Get distance to edge of screen on Y
-	if (LS032_PIXEL_HEIGHT - pos_y < char_height)
-		char_height = LS032_PIXEL_HEIGHT - pos_y;
+	if (LS032_PIXEL_HEIGHT - pos_y - 1 < char_height)
+		char_height = LS032_PIXEL_HEIGHT - pos_y - 1;
 
 	for (uint8_t col = 0; col < char_width; col++) {
 		memcpy(ls032->vram + vram_idx, ALPHNUM_SIZES[size] + char_idx + 1 + col*char_height, char_height);
@@ -314,7 +315,8 @@ uint8_t LS032_DrawChar(LS032_HandleTypeDef *ls032, uint16_t pos_x, uint16_t pos_
 
 uint8_t LS032_DrawString(LS032_HandleTypeDef *ls032, uint16_t pos_x, uint16_t pos_y, uint8_t size, uint8_t len, char* str) {
 	for (uint8_t i = 0; i < len; i++) {
-		LS032_DrawChar(ls032, pos_x, pos_y, size, str[i]);
+		if (LS032_DrawChar(ls032, pos_x, pos_y, size, str[i]))
+			return ERROR;
 		uint16_t char_idx = ALPHNUM_SIZES_IDX[size][(uint8_t)(str[i])];
 		pos_x += ALPHNUM_SIZES[size][char_idx];
 	}
