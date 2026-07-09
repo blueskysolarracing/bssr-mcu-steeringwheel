@@ -94,6 +94,7 @@ uint8_t LS032_UpdateManual(LS032_HandleTypeDef *ls032);
 uint8_t LS032_UpdateAsync(LS032_HandleTypeDef *ls032);
 uint8_t LS032_Wipe(LS032_HandleTypeDef *ls032);
 
+uint8_t LS032_ResetRegister(LS032_HandleTypeDef *ls032, uint8_t reg);
 uint8_t LS032_ResetRegisters(LS032_HandleTypeDef *ls032);
 uint8_t LS032_UpdateFlash(LS032_HandleTypeDef *ls032);
 uint8_t LS032_DrawRegister(LS032_HandleTypeDef *ls032, uint8_t reg);

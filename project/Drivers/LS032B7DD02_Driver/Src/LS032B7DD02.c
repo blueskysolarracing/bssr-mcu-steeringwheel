@@ -219,15 +219,20 @@ uint8_t LS032_Fill(LS032_HandleTypeDef *ls032) {
 	return SUCCESS;
 }
 
+uint8_t LS032_ResetRegister(LS032_HandleTypeDef *ls032, uint8_t reg) {
+	ls032->registers[reg].pos_x = 0;
+	ls032->registers[reg].pos_y = 0;
+	ls032->registers[reg].size = 0;
+	ls032->registers[reg].mode = 0;
+	ls032->registers[reg].flash_state = 0;
+	ls032->registers[reg].len = 0;
+	memset(ls032->registers[reg].str, 0x00, 0xFF);
+	return SUCCESS;
+}
+
 uint8_t LS032_ResetRegisters(LS032_HandleTypeDef *ls032) {
 	for (uint8_t reg = 0; reg < LS032_NUMREGISTERS; reg++) {
-		ls032->registers[reg].pos_x = 0;
-		ls032->registers[reg].pos_y = 0;
-		ls032->registers[reg].size = 0;
-		ls032->registers[reg].mode = 0;
-		ls032->registers[reg].flash_state = 0;
-		ls032->registers[reg].len = 0;
-		memset(ls032->registers[reg].str, 0x00, 0xFF);
+		LS032_ResetRegister(ls032, reg);
 	}
 	return SUCCESS;
 }
@@ -261,8 +266,10 @@ uint8_t LS032_DrawRegister(LS032_HandleTypeDef *ls032, uint8_t reg) {
 uint8_t LS032_DrawScene(LS032_HandleTypeDef *ls032) {
 	uint8_t ret = SUCCESS;
 	for (uint8_t reg = 0; reg < LS032_NUMREGISTERS; reg++) {
-		if (LS032_DrawRegister(ls032, reg))
+		if (LS032_DrawRegister(ls032, reg)) {
+			LS032_ResetRegister(ls032, reg);
 			ret = ERROR;
+		}
 	}
 
 	return ret;
