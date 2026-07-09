@@ -354,7 +354,8 @@ void Handle_SPI1_RX_CPLT() {
 				LS032_TextReg_SetString(&ls032, reg, len, (char*)(spi1_rx_buf + 2));
 				break;
 			default:
-				break;
+				memset(spi1_rx_buf, 0x00, 257);
+				return;
 		}
 	} else if (spi1_rx_buf[0] == 0x00) {
 		// INPUT CMD
