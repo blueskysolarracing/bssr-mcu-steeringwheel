@@ -321,15 +321,15 @@ void Command_UPDATE_LIGHTS() {
 
 void Handle_SPI1_RX_START() {
 	// Reset the buffers
-	memset(spi1_rx_buf, 0x00, 257);
+	memset(spi1_rx_buf, 0b01000000, 257);
 	// Start DMA
-	HAL_SPI_DMAStop(&hspi1);
-	HAL_SPI_TransmitReceive_DMA(&hspi1, spi1_tx_buf, spi1_rx_buf, 257);
+	if (HAL_SPI_DMAStop(&hspi1)) NVIC_SystemReset();
+	if (HAL_SPI_TransmitReceive_DMA(&hspi1, spi1_tx_buf, spi1_rx_buf, 257)) NVIC_SystemReset();
 }
 
 void Handle_SPI1_RX_CPLT() {
 	// Stop DMA and parse the packet
-	HAL_SPI_DMAStop(&hspi1);
+	if (HAL_SPI_DMAStop(&hspi1)) NVIC_SystemReset();
 
 	if (spi1_rx_buf[0] & 0b10000000) {
 		// DISPLAY CMD
@@ -354,7 +354,7 @@ void Handle_SPI1_RX_CPLT() {
 				LS032_TextReg_SetString(&ls032, reg, len, (char*)(spi1_rx_buf + 2));
 				break;
 			default:
-				memset(spi1_rx_buf, 0x00, 257);
+				memset(spi1_rx_buf, 0b01000000, 257);
 				return;
 		}
 	} else if (spi1_rx_buf[0] == 0x00) {
@@ -379,17 +379,18 @@ void Handle_SPI1_RX_CPLT() {
 			Command_UPDATE_LIGHTS();
 		}
 	} else {
-		memset(spi1_rx_buf, 0x00, 257);
+		memset(spi1_rx_buf, 0b01000000, 257);
 		return;
 	}
 
-	memset(spi1_rx_buf, 0x00, 257);
+	memset(spi1_rx_buf, 0b01000000, 257);
 	spi1_watchdog_t = HAL_GetTick();
 }
 
 // ------------------------------------------------------------ OVERRIDE EXTERNAL INTERRUPTS -- //
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+	__disable_irq();
   if(GPIO_Pin == SPI1_CS_Pin) {
 	  if (HAL_GPIO_ReadPin(SPI1_CS_GPIO_Port, SPI1_CS_Pin)) {
 		  // SPI CS was just deasserted
@@ -401,6 +402,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   } else {
       __NOP();
   }
+  __enable_irq();
 }
 
 // ------------------------------------------------------------ OVERRIDE SPI DMA CALLBACKS -- //

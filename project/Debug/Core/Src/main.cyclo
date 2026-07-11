@@ -6,5 +6,5 @@
 ../Core/Src/main.c:322:6:Handle_SPI1_RX_START	1
 ../Core/Src/main.c:330:6:Handle_SPI1_RX_CPLT	13
 ../Core/Src/main.c:391:6:HAL_GPIO_EXTI_Callback	3
-../Core/Src/main.c:407:6:HAL_SPI_TxCpltCallback	2
-../Core/Src/main.c:420:6:Error_Handler	1
+../Core/Src/main.c:409:6:HAL_SPI_TxCpltCallback	2
+../Core/Src/main.c:422:6:Error_Handler	1
