@@ -227,7 +227,7 @@ int main(void)
 	  }
 
 	  // Check the watchdog
-	  if (HAL_GetTick() - spi1_watchdog_t >= 1000) {
+	  if (HAL_GetTick() - spi1_watchdog_t >= 100) {
 //		  spi1_watchdog_t = HAL_GetTick();
 //
 //		  LS032_Clear(&ls032);
@@ -323,8 +323,11 @@ void Handle_SPI1_RX_START() {
 	// Reset the buffers
 	memset(spi1_rx_buf, 0b01000000, 257);
 	// Start DMA
-	if (HAL_SPI_DMAStop(&hspi1)) NVIC_SystemReset();
-	if (HAL_SPI_TransmitReceive_DMA(&hspi1, spi1_tx_buf, spi1_rx_buf, 257)) NVIC_SystemReset();
+	//HAL_SPI_DMAStop(&hspi1);
+	uint8_t ret = HAL_SPI_TransmitReceive_DMA(&hspi1, spi1_tx_buf, spi1_rx_buf, 257);
+	if (ret == HAL_ERROR) NVIC_SystemReset();
+	//if (HAL_SPI_DMAStop(&hspi1)) NVIC_SystemReset();
+	//if (HAL_SPI_TransmitReceive_DMA(&hspi1, spi1_tx_buf, spi1_rx_buf, 257)) NVIC_SystemReset();
 }
 
 void Handle_SPI1_RX_CPLT() {
@@ -335,22 +338,49 @@ void Handle_SPI1_RX_CPLT() {
 		// DISPLAY CMD
 		uint8_t reg  = (spi1_rx_buf[0] & 0b01111100) >> 2;
 		uint8_t prop = (spi1_rx_buf[0] & 0b00000011);
+		uint8_t crc_comp = 0x00;
+		uint8_t crc_in = 0x00;
 		switch (prop) {
 			case 0:
 				uint16_t pos_x = (((uint16_t)spi1_rx_buf[1]) << 8) | ((uint16_t)spi1_rx_buf[2]);
 				uint16_t pos_y = (((uint16_t)spi1_rx_buf[3]) << 8) | ((uint16_t)spi1_rx_buf[4]);
+				crc_comp =
+						spi1_rx_buf[0] ^
+						spi1_rx_buf[1] ^
+						spi1_rx_buf[2] ^
+						spi1_rx_buf[3] ^
+						spi1_rx_buf[4];
+				crc_in = spi1_rx_buf[5];
+				if (crc_comp != crc_in) return;
 				LS032_TextReg_SetPos(&ls032, reg, pos_x, pos_y);
 				break;
 			case 1:
 				uint8_t size = spi1_rx_buf[1];
+				crc_comp =
+						spi1_rx_buf[0] ^
+						spi1_rx_buf[1];
+				crc_in = spi1_rx_buf[2];
+				if (crc_comp != crc_in) return;
 				LS032_TextReg_SetSize(&ls032, reg, size);
 				break;
 			case 2:
 				uint8_t mode = spi1_rx_buf[1];
+				crc_comp =
+						spi1_rx_buf[0] ^
+						spi1_rx_buf[1];
+				crc_in = spi1_rx_buf[2];
+				if (crc_comp != crc_in) return;
 				LS032_TextReg_SetMode(&ls032, reg, mode);
 				break;
 			case 3:
 				uint8_t len = spi1_rx_buf[1];
+				crc_comp =
+						spi1_rx_buf[0] ^
+						spi1_rx_buf[1];
+				for (uint8_t i = 0; i < len; i++)
+						crc_comp ^= spi1_rx_buf[i + 2];
+				crc_in = spi1_rx_buf[len + 2];
+				if (crc_comp != crc_in) return;
 				LS032_TextReg_SetString(&ls032, reg, len, (char*)(spi1_rx_buf + 2));
 				break;
 			default:
@@ -364,26 +394,39 @@ void Handle_SPI1_RX_CPLT() {
 		// FAULT LIGHT CTRL
 		if (spi1_rx_buf[1] <= 3) {
 			lights_flt_mode = spi1_rx_buf[1];
+			uint8_t crc_comp =
+					spi1_rx_buf[0] ^
+					spi1_rx_buf[1];
+			uint8_t crc_in = spi1_rx_buf[2];
+			if (crc_comp != crc_in) return;
 			Command_UPDATE_LIGHTS();
 		}
 	} else if (spi1_rx_buf[0] == 0x02) {
 		// IND. LIGHT CTRL
 		if (spi1_rx_buf[1] <= 3) {
 			lights_ind_mode = spi1_rx_buf[1];
+			uint8_t crc_comp =
+					spi1_rx_buf[0] ^
+					spi1_rx_buf[1];
+			uint8_t crc_in = spi1_rx_buf[2];
+			if (crc_comp != crc_in) return;
 			Command_UPDATE_LIGHTS();
 		}
 	} else if (spi1_rx_buf[0] == 0x03) {
 		// READ LIGHT BRIGHTNESS
 		if (spi1_rx_buf[1] <= 100) {
 			lights_read_brightness = (uint16_t)(spi1_rx_buf[1])*100;
+			uint8_t crc_comp =
+					spi1_rx_buf[0] ^
+					spi1_rx_buf[1];
+			uint8_t crc_in = spi1_rx_buf[2];
+			if (crc_comp != crc_in) return;
 			Command_UPDATE_LIGHTS();
 		}
 	} else {
-		memset(spi1_rx_buf, 0b01000000, 257);
 		return;
 	}
 
-	memset(spi1_rx_buf, 0b01000000, 257);
 	spi1_watchdog_t = HAL_GetTick();
 }
 

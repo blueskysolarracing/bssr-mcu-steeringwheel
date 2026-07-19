@@ -4,7 +4,7 @@
 ../Core/Src/main.c:295:6:u16ToStr	3
 ../Core/Src/main.c:302:6:Command_UPDATE_LIGHTS	4
 ../Core/Src/main.c:322:6:Handle_SPI1_RX_START	1
-../Core/Src/main.c:330:6:Handle_SPI1_RX_CPLT	13
-../Core/Src/main.c:391:6:HAL_GPIO_EXTI_Callback	3
-../Core/Src/main.c:409:6:HAL_SPI_TxCpltCallback	2
-../Core/Src/main.c:422:6:Error_Handler	1
+../Core/Src/main.c:333:6:Handle_SPI1_RX_CPLT	21
+../Core/Src/main.c:434:6:HAL_GPIO_EXTI_Callback	3
+../Core/Src/main.c:452:6:HAL_SPI_TxCpltCallback	2
+../Core/Src/main.c:465:6:Error_Handler	1
